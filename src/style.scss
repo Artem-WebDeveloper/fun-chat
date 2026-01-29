@@ -1,0 +1,39 @@
+:root {
+  --text-color: #ffffffde;
+  --bg-color: #242424;
+}
+
+*,
+*::after,
+*::before {
+  margin: 0;
+  padding: 0;
+  box-sizing: inherit;
+}
+
+html {
+  -webkit-text-size-adjust: 100%;
+  -moz-text-size-adjust: 100%;
+  text-size-adjust: 100%;
+  font-synthesis: none;
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  scroll-behavior: smooth;
+
+  font-size: 62.5%;
+}
+
+body {
+  min-height: 100dvh;
+  box-sizing: border-box;
+  font-family:
+    -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell,
+    'Helvetica Neue', sans-serif;
+  background: var(--bg-color);
+  min-height: 100vh;
+  font-size: 1.8rem;
+  line-height: 1.6;
+
+  color: var(--text-color);
+}
