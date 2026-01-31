@@ -1,6 +1,6 @@
 import { PageIDs } from './types';
 import Page from '../core/templates/page';
-import AboutPage from '../pages/about/about';
+import AboutPage from '../pages/about/about.page';
 import MainPage from '../pages/main/main.page';
 import LoginPage from '../pages/login/login.page';
 import ErrorPage from '../pages/error/error.page';
@@ -49,8 +49,8 @@ export default class App {
   }
 
   run() {
-    // this.renderPage('about-page');
-    this.enableRouteChange();
+    this.renderPage(PageIDs.MAIN_PAGE);
+    // this.enableRouteChange();
     chatSocket.connect();
 
     /*  this.showLoader();

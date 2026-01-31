@@ -1,8 +1,14 @@
 :root {
   --text-color: #ffffffde;
-  --bg-color: #242424;
+
   --bg-color: linear-gradient(to bottom right, #5e7eb9, #234f90);
   --bg-login-card: linear-gradient(to bottom right, #254e8e, #6282bd);
+
+  --accent-color-primary: #ff8e71;
+  --accent-glow: rgba(255, 142, 113, 0.4);
+
+  // --accent-color: #48ffc4;
+  // --accent-color: #c3b1e1;
 }
 
 *,
@@ -47,6 +53,84 @@ a {
     box-shadow:
       0 0 0 3px rgba(255, 255, 255, 0.6),
       0 0 0 6px rgba(144, 186, 225, 0.6);
+  }
+}
+
+.btn {
+  color: var(--text-color);
+  font-size: inherit;
+  border-radius: 2rem;
+  background-color: rgba(255, 255, 255, 0.2);
+  border: none;
+  padding: 1rem 2rem;
+  transition: 0.25s;
+
+  @media (hover: hover) and (pointer: fine) {
+    &:hover:not(:disabled) {
+      cursor: pointer;
+      background: #90bae1;
+      background: var(--accent-glow);
+      box-shadow: 0 0.6rem 1.6rem rgba(0, 0, 0, 0.25);
+    }
+  }
+}
+
+.author-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.8rem;
+  margin-top: 1rem;
+  padding: 0.5rem 1.2rem;
+
+  color: var(--accent-color-primary);
+  text-decoration: none;
+  font-weight: 300;
+  font-size: 1.8rem;
+  letter-spacing: 1px;
+
+  // background: rgba(255, 255, 255, 0.05);
+  border-radius: 1.2rem;
+  position: relative;
+  transition: all 0.3s ease;
+
+  &::before {
+    content: '↗';
+    font-size: 1.4rem;
+    opacity: 0.5;
+    transition: transform 0.3s ease;
+  }
+
+  &::after {
+    content: '';
+    position: absolute;
+    bottom: 0;
+    left: 50%;
+    width: 0;
+    height: 1px;
+    background: linear-gradient(to right, transparent, #a6c9ea, transparent);
+    transform: translateX(-50%);
+    transition: width 0.4s ease;
+  }
+
+  @media (hover: hover) {
+    &:hover {
+      // background: rgba(255, 255, 255, 0.1);
+      color: var(--text-color);
+      transform: translateY(-2px);
+
+      &::before {
+        transform: translate(2px, -2px);
+        opacity: 1;
+      }
+
+      &::after {
+        width: 80%;
+      }
+    }
+  }
+
+  &:active {
+    transform: translateY(0);
   }
 }
 

@@ -1,0 +1,27 @@
+#about-page {
+  display: grid;
+  height: 100dvh;
+  place-items: center;
+  padding: 0 2rem;
+}
+
+.about {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+
+  backdrop-filter: blur(2rem) saturate(1.07);
+  text-align: center;
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  padding: 3rem;
+  border-radius: 2rem;
+
+  & > :last-child {
+    margin-top: 1rem;
+    align-self: self-start;
+  }
+
+  & p:last-of-type {
+    margin-bottom: 1rem;
+  }
+}
