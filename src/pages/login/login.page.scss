@@ -1,0 +1,116 @@
+.login-form {
+  position: absolute;
+  top: 40%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  padding: 6.5rem 3.5rem 8rem 3.5rem;
+  min-width: 35rem;
+
+  display: flex;
+  flex-direction: column;
+  gap: 2.6rem;
+  border-radius: 2.4rem;
+
+  background: var(--bg-login-card);
+  backdrop-filter: blur(1rem);
+  box-shadow: 0.2rem 0.1rem 2rem rgba(0, 0, 0, 0.2);
+
+  &__login,
+  &__password {
+    width: 100%;
+    font-family: inherit;
+    font-size: 1.8rem;
+    background: transparent;
+    border: 2px solid var(--text-color);
+    color: var(--text-color);
+    border-radius: 1rem;
+    padding: 1.2rem 2rem;
+    text-transform: uppercase;
+    letter-spacing: 0.8px;
+    text-align: center;
+    border: none;
+    border-bottom: 2px solid rgba(255, 255, 255, 0.4);
+    border-radius: 0;
+
+    transition: border-color 0.3s ease;
+
+    &::placeholder {
+      color: rgba(255, 255, 255, 0.5);
+      text-align: center;
+      text-transform: uppercase;
+      transition: all 0.3s;
+    }
+
+    &:focus {
+      outline: none;
+      border-bottom-color: #c2e0ff;
+
+      &::placeholder {
+        opacity: 0.5;
+      }
+    }
+  }
+
+  &__btn {
+    margin-top: 2.8rem;
+    width: 22rem;
+    padding: 1rem 3rem;
+    align-self: center;
+    background: #90bae1;
+    border: none;
+    color: inherit;
+    font-family: inherit;
+    text-transform: uppercase;
+    font-size: 2rem;
+    font-weight: 600;
+    border-radius: 3rem;
+
+    transition:
+      background-color 0.3s ease,
+      transform 0.2s ease,
+      box-shadow 0.3s ease,
+      opacity 0.3s ease;
+
+    @media (hover: hover) and (pointer: fine) {
+      &:hover:not(:disabled) {
+        cursor: pointer;
+        background: #a6c9ea;
+        box-shadow: 0 0.6rem 1.6rem rgba(0, 0, 0, 0.25);
+        transform: translateY(-1px);
+      }
+    }
+
+    &:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+      box-shadow: none;
+    }
+  }
+
+  &__title {
+    font-weight: 200;
+    text-align: center;
+    text-transform: uppercase;
+    letter-spacing: 2.4px;
+    position: relative;
+    display: inline-block;
+
+    &::after {
+      content: '';
+      position: absolute;
+      bottom: -4%;
+      left: 50%;
+      transform: translateX(-50%);
+
+      width: 100%;
+      height: 1px;
+
+      background: linear-gradient(
+        to right,
+        transparent 0%,
+        rgba(166, 201, 234, 0.5) 50%,
+        transparent 100%
+      );
+    }
+  }
+}

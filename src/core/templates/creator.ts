@@ -3,6 +3,7 @@ type ElementParameters<T extends keyof HTMLElementTagNameMap> = {
   id?: string;
   classNames?: string[];
   text?: string;
+  type?: string;
 };
 
 class Creator {
@@ -12,6 +13,7 @@ class Creator {
     if (params.id) elem.id = params.id;
     if (params.classNames) elem.classList.add(...params.classNames);
     if (params.text) elem.textContent = params.text;
+    if (elem instanceof HTMLInputElement && params.type) elem.type = params.type;
 
     return elem;
   }

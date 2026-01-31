@@ -4,6 +4,7 @@ import AboutPage from '../pages/about/about';
 import MainPage from '../pages/main/main.page';
 import LoginPage from '../pages/login/login.page';
 import ErrorPage from '../pages/error/error.page';
+import chatSocket from '../core/services/socket.services';
 
 type RouteConfig = {
   path: string;
@@ -50,5 +51,24 @@ export default class App {
   run() {
     // this.renderPage('about-page');
     this.enableRouteChange();
+    chatSocket.connect();
+
+    /*  this.showLoader();
+    chatSocket.onConnectionChange = (connected) => {
+      if (connected) {
+        this.hideLoader();
+      } else {
+        this.showLoader();
+      }
+    };
+  }
+  showLoader() {
+    const loader = dom.create({ tag: 'div', classNames: ['loader'] });
+    this.container.append(loader);
+  }
+  hideLoader() {
+    const loader = document.querySelector('.loader');
+    if (loader) loader.remove();
+  } */
   }
 }

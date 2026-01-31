@@ -1,6 +1,8 @@
 :root {
   --text-color: #ffffffde;
   --bg-color: #242424;
+  --bg-color: linear-gradient(to bottom right, #5e7eb9, #234f90);
+  --bg-login-card: linear-gradient(to bottom right, #254e8e, #6282bd);
 }
 
 *,
@@ -36,4 +38,43 @@ body {
   line-height: 1.6;
 
   color: var(--text-color);
+}
+
+button,
+a {
+  &:focus-visible {
+    outline: none;
+    box-shadow:
+      0 0 0 3px rgba(255, 255, 255, 0.6),
+      0 0 0 6px rgba(144, 186, 225, 0.6);
+  }
+}
+
+.loader {
+  position: fixed;
+  height: 100vh;
+  width: 100vw;
+  background-color: rgba(255, 255, 255, 0.05);
+  backdrop-filter: blur(10px);
+  &::before {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%) rotate(0deg);
+
+    content: '';
+    width: 7rem;
+    height: 7rem;
+    border-radius: 50%;
+    border: 0.5rem solid transparent;
+    border-top: 0.5rem solid #ffffffde;
+    background-color: transparent;
+    animation: loading 1s linear infinite;
+  }
+}
+
+@keyframes loading {
+  to {
+    transform: translate(-50%, -50%) rotate(360deg);
+  }
 }

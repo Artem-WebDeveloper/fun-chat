@@ -1,0 +1,65 @@
+.btn-about {
+  width: 4rem;
+  height: 4rem;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+
+  background-color: rgba(255, 255, 255, 0.2);
+  border-radius: 50%;
+  color: var(--text-color);
+  text-decoration: none;
+  overflow: hidden;
+  position: relative;
+  contain: layout;
+
+  transition:
+    width 0.3s cubic-bezier(0.4, 0, 0.2, 1),
+    border-radius 0.3s ease,
+    background-color 0.3s ease;
+
+  &__icon {
+    position: absolute;
+    transition:
+      opacity 0.1s ease,
+      transform 0.3s ease;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  &__text {
+    opacity: 0;
+    white-space: nowrap;
+    transform: translateX(2rem);
+    transition:
+      opacity 0.1s ease,
+      transform 0.3s ease;
+    font-weight: 600;
+  }
+
+  @media (hover: hover) {
+    &:hover {
+      width: 10rem;
+      border-radius: 3rem;
+      background-color: rgba(255, 255, 255, 0.3);
+
+      & .btn-about__icon {
+        opacity: 0;
+        transform: scale(0.5);
+      }
+
+      & .btn-about__text {
+        opacity: 1;
+        transform: translateX(0);
+      }
+    }
+  }
+
+  &--login {
+    position: absolute;
+    bottom: 1.2rem;
+    align-self: center;
+  }
+}
