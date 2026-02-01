@@ -28,6 +28,16 @@ export default class App {
   renderPage(pageId: string) {
     this.container.replaceChildren();
 
+    if (pageId === PageIDs.LOGIN_PAGE && chatSocket.isAuthorized) {
+      window.location.hash = PageIDs.MAIN_PAGE;
+      return;
+    }
+
+    if (pageId === PageIDs.MAIN_PAGE && !chatSocket.isAuthorized) {
+      window.location.hash = PageIDs.LOGIN_PAGE;
+      return;
+    }
+
     const route = this.routes.find((route) => route.path === pageId);
     const page = route ? new route.component(pageId) : new ErrorPage('error-page');
 
@@ -49,8 +59,8 @@ export default class App {
   }
 
   run() {
-    this.renderPage(PageIDs.MAIN_PAGE);
-    // this.enableRouteChange();
+    // this.renderPage(PageIDs.MAIN_PAGE);
+    this.enableRouteChange();
     chatSocket.connect();
 
     /*  this.showLoader();

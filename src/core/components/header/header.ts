@@ -1,5 +1,7 @@
 import dom from '../../templates/creator';
 
+import './header.scss';
+
 export default class Header {
   container: HTMLElement;
 

@@ -3,6 +3,8 @@ import Footer from '../../core/components/footer/footer';
 import dom from '../../core/templates/creator';
 import Page from '../../core/templates/page';
 
+import './main.page.scss';
+
 export default class MainPage extends Page {
   header: Header;
   footer: Footer;

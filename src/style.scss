@@ -4,8 +4,13 @@
   --bg-color: linear-gradient(to bottom right, #5e7eb9, #234f90);
   --bg-login-card: linear-gradient(to bottom right, #254e8e, #6282bd);
 
+  --primary-btn-color: #90bae1;
+  --primary-btn-color-hover: #a6c9ea;
+
   --accent-color-primary: #ff8e71;
   --accent-glow: rgba(255, 142, 113, 0.4);
+
+  --error-color: #e54545;
 
   // --accent-color: #48ffc4;
   // --accent-color: #c3b1e1;
@@ -71,6 +76,11 @@ a {
       background: #90bae1;
       background: var(--accent-glow);
       box-shadow: 0 0.6rem 1.6rem rgba(0, 0, 0, 0.25);
+
+      &:active {
+        box-shadow: 0 0.6rem 1rem rgba(0, 0, 0, 0.1);
+        scale: 0.99;
+      }
     }
   }
 }

@@ -3,3 +3,8 @@ export const PageIDs = {
   ABOUT_PAGE: 'about-page',
   LOGIN_PAGE: 'login-page',
 } as const;
+
+export type User = {
+  login: string;
+  password: string;
+};
