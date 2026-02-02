@@ -1,3 +1,4 @@
+import { PageIDs } from '../../app/types';
 import dom from '../../core/templates/creator';
 import Page from '../../core/templates/page';
 
@@ -12,12 +13,12 @@ export default class AboutPage extends Page {
     LINK_AUTHOR: 'https://github.com/Artem-WebDeveloper',
   };
 
-  btnGoBack: HTMLButtonElement;
   authorLink: HTMLAnchorElement;
+  btnGoBack: HTMLAnchorElement;
 
   constructor(id: string) {
     super(id);
-    this.btnGoBack = dom.create({ tag: 'button', classNames: ['btn'], text: 'Go back' });
+    this.btnGoBack = dom.create({ tag: 'a', classNames: ['btn', 'btn__link'], text: 'Go back' });
     this.authorLink = dom.create({
       tag: 'a',
       classNames: ['author-link'],
@@ -36,6 +37,7 @@ export default class AboutPage extends Page {
     });
 
     this.authorLink.href = this.content.LINK_AUTHOR;
+    this.btnGoBack.href = `#${PageIDs.LOGIN_PAGE}`;
     box.append(this.authorLink, this.btnGoBack);
 
     this.container.append(box);

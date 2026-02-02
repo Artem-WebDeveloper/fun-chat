@@ -1,11 +1,13 @@
 import ButtonAbout from '../../core/components/button-about/button-about';
-import socketServices from '../../core/services/socket.services';
+import chatSocket from '../../core/services/socket.services';
 import dom from '../../core/templates/creator';
 import Page from '../../core/templates/page';
 
 import './login.page.scss';
 
 export default class LoginPage extends Page {
+  DEL_MODAL_ERROR_SEC = 2000;
+
   form: HTMLFormElement;
   loginInput: HTMLInputElement;
   passwordInput: HTMLInputElement;
@@ -41,6 +43,10 @@ export default class LoginPage extends Page {
     );
 
     this.form.addEventListener('submit', this.submitForm);
+
+    chatSocket.onServerError = (message: string) => {
+      this.showServerError(message);
+    };
   }
 
   private renderLoginForm() {
@@ -150,7 +156,7 @@ export default class LoginPage extends Page {
     const password = String(formData.get('password-input'));
 
     // Register USER
-    socketServices.loginUser({ login, password });
+    chatSocket.loginUser({ login, password });
   };
 
   showValidateError(elem: HTMLElement, message: string) {

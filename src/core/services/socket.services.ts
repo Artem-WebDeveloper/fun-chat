@@ -8,6 +8,9 @@ class ChatSocket {
 
   isAuthorized: boolean = false;
   curUser: null | string = null;
+  curPassword: string | null = null;
+
+  onServerError?: (message: string) => void;
 
   onConnectionChange?: (connected: boolean) => void;
 
@@ -34,6 +37,22 @@ class ChatSocket {
         this.handleUserlogin();
         this.curUser = data.payload.user.login;
         this.isAuthorized = data.payload.user.isLogined;
+      }
+
+      if (data.type === 'USER_LOGOUT' && !data.payload.user.isLogined) {
+        this.handleUserlogout();
+        this.clearAuth();
+      }
+
+      if (data.type === 'ERROR' && data.payload.error) {
+        this.onServerError?.(data.payload.error);
+      }
+
+      if (data.type === 'USER_EXTERNAL_LOGOUT') {
+        if (data.payload.user.login === this.curUser) {
+          this.clearAuth();
+          window.location.hash = PageIDs.LOGIN_PAGE;
+        }
       }
     };
 
@@ -67,12 +86,43 @@ class ChatSocket {
       },
     };
 
+    this.curPassword = user.password;
     this.socket.send(JSON.stringify(loginData));
+  }
+
+  logoutUser() {
+    if (!this.socket || this.socket.readyState !== WebSocket.OPEN) {
+      console.warn('WebSocket not connected');
+      return;
+    }
+    const loginData = {
+      id: String(Date.now()),
+      type: 'USER_LOGOUT',
+      payload: {
+        user: {
+          login: this.curUser,
+          password: this.curPassword,
+        },
+      },
+    };
+
+    this.socket.send(JSON.stringify(loginData));
+  }
+
+  clearAuth() {
+    this.curUser = null;
+    this.curPassword = null;
+    this.isAuthorized = false;
   }
 
   handleUserlogin() {
     console.log('Login succes');
     window.location.hash = PageIDs.MAIN_PAGE;
+  }
+
+  handleUserlogout() {
+    console.log('Logout succes');
+    window.location.hash = PageIDs.LOGIN_PAGE;
   }
 }
 

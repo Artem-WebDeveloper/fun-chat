@@ -8,3 +8,9 @@ export type User = {
   login: string;
   password: string;
 };
+
+export type IconOptions = {
+  size?: number;
+  className?: string;
+  color?: string;
+};

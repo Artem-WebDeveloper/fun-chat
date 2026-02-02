@@ -62,4 +62,11 @@
     bottom: 1.2rem;
     align-self: center;
   }
+
+  &--main {
+    position: absolute;
+    top: 50%;
+    right: 14rem;
+    translate: 0 -50%;
+  }
 }
