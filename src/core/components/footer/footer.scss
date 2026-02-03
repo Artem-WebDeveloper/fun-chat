@@ -1,0 +1,19 @@
+.footer {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  justify-items: center;
+  align-items: center;
+  padding: 2.5rem 2rem;
+
+  font-weight: 300;
+
+  &__logo {
+    display: flex;
+    gap: 1rem;
+    align-items: center;
+
+    & div {
+      transform: translateY(4px);
+    }
+  }
+}

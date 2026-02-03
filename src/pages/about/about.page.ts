@@ -37,6 +37,7 @@ export default class AboutPage extends Page {
     });
 
     this.authorLink.href = this.content.LINK_AUTHOR;
+    this.authorLink.target = '_blank';
     this.btnGoBack.href = `#${PageIDs.LOGIN_PAGE}`;
     box.append(this.authorLink, this.btnGoBack);
 
