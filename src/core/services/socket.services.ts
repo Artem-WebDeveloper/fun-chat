@@ -12,9 +12,11 @@ class ChatSocket {
   curPassword: string | null = null;
 
   otherUsers: Record<string, User> = {};
+  selectedUser: null | string = null;
 
   onServerError?: (message: string) => void;
   updateUsers?: (allUsers: Record<string, User>) => void;
+  updateStatusDialogUser?: (isLogined: boolean) => void;
 
   onConnectionChange?: (connected: boolean) => void;
 
@@ -56,6 +58,9 @@ class ChatSocket {
         const user = data.payload.user;
 
         if (user.login === this.curUser) return;
+        if (user.login === this.selectedUser) {
+          this.updateStatusDialogUser?.(user.isLogined);
+        }
 
         this.updateUser(user.login, user);
         this.updateUsers?.({ ...this.otherUsers });
@@ -69,6 +74,10 @@ class ChatSocket {
         } else {
           this.updateUser(user.login, user);
           this.updateUsers?.({ ...this.otherUsers });
+
+          if (user.login === this.selectedUser) {
+            this.updateStatusDialogUser?.(user.isLogined);
+          }
         }
       }
 
@@ -76,6 +85,10 @@ class ChatSocket {
         data.payload.users.forEach((user: User) => {
           if (user.login === this.curUser) return;
           this.updateUser(user.login, user);
+
+          if (user.login === this.selectedUser) {
+            this.updateStatusDialogUser?.(user.isLogined);
+          }
         });
 
         this.updateUsers?.({ ...this.otherUsers });
@@ -156,6 +169,24 @@ class ChatSocket {
     this.socket.send(JSON.stringify(loginDataInActive));
   }
 
+  sendMessage(message: string) {
+    if (!this.socket || this.socket.readyState !== WebSocket.OPEN) {
+      console.warn('WebSocket not connected');
+      return;
+    }
+    const data = {
+      id: String(Date.now()),
+      type: 'MSG_SEND',
+      payload: {
+        message: {
+          to: this.selectedUser,
+          text: message,
+        },
+      },
+    };
+    this.socket.send(JSON.stringify(data));
+  }
+
   private clearAuth() {
     this.curUser = null;
     this.curPassword = null;
@@ -167,6 +198,10 @@ class ChatSocket {
       ...this.otherUsers[login],
       ...user,
     };
+  }
+
+  public setSelectedUser(user: string) {
+    this.selectedUser = user;
   }
 
   handleUserlogin() {

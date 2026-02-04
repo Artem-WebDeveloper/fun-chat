@@ -5,6 +5,7 @@ import MainPage from '../pages/main/main.page';
 import LoginPage from '../pages/login/login.page';
 import ErrorPage from '../pages/error/error.page';
 import chatSocket from '../core/services/socket.services';
+import navigate from '../core/utils/navigate';
 
 type RouteConfig = {
   path: string;
@@ -29,12 +30,12 @@ export default class App {
     this.container.replaceChildren();
 
     if (pageId === PageIDs.LOGIN_PAGE && chatSocket.isAuthorized) {
-      window.location.hash = PageIDs.MAIN_PAGE;
+      navigate(PageIDs.MAIN_PAGE);
       return;
     }
 
     if (pageId === PageIDs.MAIN_PAGE && !chatSocket.isAuthorized) {
-      window.location.hash = PageIDs.LOGIN_PAGE;
+      navigate(PageIDs.LOGIN_PAGE);
       return;
     }
 
