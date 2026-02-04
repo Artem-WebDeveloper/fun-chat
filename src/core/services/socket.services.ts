@@ -1,4 +1,5 @@
-import { PageIDs, type User } from '../../app/types';
+import { PageIDs, type CurrentUser, type User } from '../../app/types';
+import navigate from '../utils/navigate';
 
 const BASE_URL = import.meta.env.VITE_API_URL;
 
@@ -10,7 +11,10 @@ class ChatSocket {
   curUser: null | string = null;
   curPassword: string | null = null;
 
+  otherUsers: Record<string, User> = {};
+
   onServerError?: (message: string) => void;
+  updateUsers?: (allUsers: Record<string, User>) => void;
 
   onConnectionChange?: (connected: boolean) => void;
 
@@ -48,11 +52,33 @@ class ChatSocket {
         this.onServerError?.(data.payload.error);
       }
 
+      if (data.type === 'USER_EXTERNAL_LOGIN') {
+        const user = data.payload.user;
+
+        if (user.login === this.curUser) return;
+
+        this.updateUser(user.login, user);
+        this.updateUsers?.({ ...this.otherUsers });
+      }
+
       if (data.type === 'USER_EXTERNAL_LOGOUT') {
-        if (data.payload.user.login === this.curUser) {
+        const user = data.payload.user;
+        if (user.login === this.curUser) {
           this.clearAuth();
-          window.location.hash = PageIDs.LOGIN_PAGE;
+          navigate(PageIDs.LOGIN_PAGE);
+        } else {
+          this.updateUser(user.login, user);
+          this.updateUsers?.({ ...this.otherUsers });
         }
+      }
+
+      if (data.type === 'USER_ACTIVE' || data.type === 'USER_INACTIVE') {
+        data.payload.users.forEach((user: User) => {
+          if (user.login === this.curUser) return;
+          this.updateUser(user.login, user);
+        });
+
+        this.updateUsers?.({ ...this.otherUsers });
       }
     };
 
@@ -72,7 +98,7 @@ class ChatSocket {
     };
   }
 
-  loginUser(user: User) {
+  loginUser(user: CurrentUser) {
     if (!this.socket || this.socket.readyState !== WebSocket.OPEN) {
       console.warn('WebSocket not connected');
       return;
@@ -109,20 +135,49 @@ class ChatSocket {
     this.socket.send(JSON.stringify(loginData));
   }
 
-  clearAuth() {
+  getAllUsers() {
+    if (!this.socket || this.socket.readyState !== WebSocket.OPEN) {
+      console.warn('WebSocket not connected');
+      return;
+    }
+    const loginDataActive = {
+      id: String(Date.now()),
+      type: 'USER_ACTIVE',
+      payload: null,
+    };
+
+    const loginDataInActive = {
+      id: String(Date.now()),
+      type: 'USER_INACTIVE',
+      payload: null,
+    };
+
+    this.socket.send(JSON.stringify(loginDataActive));
+    this.socket.send(JSON.stringify(loginDataInActive));
+  }
+
+  private clearAuth() {
     this.curUser = null;
     this.curPassword = null;
     this.isAuthorized = false;
   }
 
+  private updateUser(login: string, user: User) {
+    this.otherUsers[login] = {
+      ...this.otherUsers[login],
+      ...user,
+    };
+  }
+
   handleUserlogin() {
     console.log('Login succes');
-    window.location.hash = PageIDs.MAIN_PAGE;
+    navigate(PageIDs.MAIN_PAGE);
+    this.getAllUsers();
   }
 
   handleUserlogout() {
     console.log('Logout succes');
-    window.location.hash = PageIDs.LOGIN_PAGE;
+    navigate(PageIDs.LOGIN_PAGE);
   }
 }
 

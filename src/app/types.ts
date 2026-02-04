@@ -4,7 +4,7 @@ export const PageIDs = {
   LOGIN_PAGE: 'login-page',
 } as const;
 
-export type User = {
+export type CurrentUser = {
   login: string;
   password: string;
 };
@@ -14,3 +14,5 @@ export type IconOptions = {
   className?: string;
   color?: string;
 };
+
+export type User = { login: string; isLogined: boolean };
