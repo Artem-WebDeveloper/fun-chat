@@ -5,7 +5,35 @@ import Page from '../../core/templates/page';
 import chatSocket from '../../core/services/socket.services';
 
 import './main.page.scss';
-import type { User } from '../../app/types';
+import type { Message, User } from '../../app/types';
+import formatDate from '../../core/utils/formatDate';
+import getStatusMessage from '../../core/utils/getStatusMessage';
+
+const user1 = {
+  id: '220d350f-c1a1-4b5f-8d8c-3b9dc52a38eb_1770233935189',
+  from: 'Artem',
+  to: 'dvd1',
+  text: 'Asfds',
+  datetime: 1770233935189,
+  status: {
+    isDelivered: false,
+    isReaded: false,
+    isEdited: false,
+  },
+};
+
+const user2 = {
+  id: '220d350f-c1a1-4b5f-8d8c-3b9dc52a38eb_1770233935189',
+  from: 'dvd1',
+  to: 'Artem',
+  text: 'Asfds',
+  datetime: 1770233937189,
+  status: {
+    isDelivered: false,
+    isReaded: false,
+    isEdited: false,
+  },
+};
 
 export default class MainPage extends Page {
   header: Header;
@@ -86,11 +114,10 @@ export default class MainPage extends Page {
 
       header.append(name, status);
       const content = dom.create({ tag: 'div', classNames: ['chat'] });
-      const message = this.createMessage('user');
-      const message2 = this.createMessage('user');
-      const message1 = this.createMessage('companion');
-      const message3 = this.createMessage('companion');
-      content.append(message, message2, message1, message3);
+      const message = this.createMessage(user1);
+      const message2 = this.createMessage(user2);
+
+      content.append(message, message2);
 
       this.inputField.placeholder = 'Write a message...';
       this.inputField.name = 'dialog-input';
@@ -98,32 +125,41 @@ export default class MainPage extends Page {
       this.main.append(header, content, this.form);
     } else {
       const hint = dom.create({ tag: 'p', text: 'Select a user to send the message...' });
+      hint.classList.add('main__info');
       this.main.append(hint);
     }
   }
 
-  createMessage(from: 'user' | 'companion') {
+  createMessage(message: Message) {
+    const { from, text, datetime, status } = message;
+    const isMine = from === chatSocket.curUser;
+
     const wrap = dom.create({ tag: 'div', classNames: ['chat__message'] });
-    if (from === 'companion') {
-      wrap.classList.add('chat__message--companion');
-    }
-    const date = dom.create({
+    if (!isMine) wrap.classList.add('chat__message--companion');
+
+    const date = formatDate(datetime);
+    const dateElement = dom.create({ tag: 'p', classNames: ['chat__message-date'], text: date });
+    const fromName = dom.create({
       tag: 'p',
-      classNames: ['chat__message-date'],
-      text: '03.02.26, 12:45',
+      classNames: ['chat__message-from'],
+      text: isMine ? 'You' : from,
     });
-    const fromName = dom.create({ tag: 'p', classNames: ['chat__message-from'], text: 'You' });
     const content = dom.create({ tag: 'p', classNames: ['chat__message-content'] });
-    const status = dom.create({ tag: 'span', classNames: ['chat__message-status'], text: 'sent' });
+    content.textContent = text;
+
+    const statusElement = dom.create({
+      tag: 'span',
+      classNames: ['chat__message-status'],
+      text: getStatusMessage(status, isMine),
+    });
+
+    if (status.isEdited) {
+      statusElement.textContent += ' (edited)';
+    }
+
     const header = dom.create({ tag: 'div', classNames: ['chat__message-header'] });
-
-    content.textContent = `Привет! Как дела😁🥇?
-    Что нвоог??
-
-    :))`;
-
-    header.append(fromName, date);
-    wrap.append(header, content, status);
+    header.append(fromName, dateElement);
+    wrap.append(header, content, statusElement);
 
     return wrap;
   }

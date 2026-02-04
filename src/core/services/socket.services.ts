@@ -1,4 +1,4 @@
-import { PageIDs, type CurrentUser, type User } from '../../app/types';
+import { PageIDs, type CurrentUser, type Message, type User } from '../../app/types';
 import navigate from '../utils/navigate';
 
 const BASE_URL = import.meta.env.VITE_API_URL;
@@ -12,6 +12,7 @@ class ChatSocket {
   curPassword: string | null = null;
 
   otherUsers: Record<string, User> = {};
+  messages: Record<string, Message[]> = {};
   selectedUser: null | string = null;
 
   onServerError?: (message: string) => void;
@@ -92,6 +93,14 @@ class ChatSocket {
         });
 
         this.updateUsers?.({ ...this.otherUsers });
+      }
+
+      if (data.type === 'MSG_SEND') {
+        if (!this.selectedUser) return;
+
+        (this.messages[this.selectedUser] ??= []).push(data.payload.message);
+
+        console.log(this.messages);
       }
     };
 
@@ -197,6 +206,13 @@ class ChatSocket {
     this.otherUsers[login] = {
       ...this.otherUsers[login],
       ...user,
+    };
+  }
+
+  private updateMessages(login: string, message: Message) {
+    this.messages[login] = {
+      ...this.messages[login],
+      ...message,
     };
   }
 

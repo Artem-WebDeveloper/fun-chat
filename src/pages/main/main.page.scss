@@ -44,6 +44,11 @@
     padding: 1rem 0;
     box-shadow: 0 1.5rem 1.5rem -1rem rgba(0, 0, 0, 0.15);
   }
+
+  &__info {
+    margin: auto;
+    font-size: 2rem;
+  }
 }
 
 .chat {
@@ -118,6 +123,7 @@
   }
 
   &__message-status {
+    min-height: 2.5rem;
     padding: 0 1rem;
     justify-self: end;
     width: fit-content;

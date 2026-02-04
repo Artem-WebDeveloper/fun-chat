@@ -16,3 +16,18 @@ export type IconOptions = {
 };
 
 export type User = { login: string; isLogined: boolean };
+
+export type Message = {
+  id: string;
+  from: string;
+  to: string;
+  text: string;
+  datetime: number;
+  status: StatusMessage;
+};
+
+export type StatusMessage = {
+  isDelivered: boolean;
+  isReaded: boolean;
+  isEdited: boolean;
+};
