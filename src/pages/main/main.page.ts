@@ -9,7 +9,9 @@ import type { Message, User } from '../../app/types';
 import formatDate from '../../core/utils/formatDate';
 import getStatusMessage from '../../core/utils/getStatusMessage';
 
-const user1 = {
+// FOR CHECKING
+/*  
+  const user1 = {
   id: '220d350f-c1a1-4b5f-8d8c-3b9dc52a38eb_1770233935189',
   from: 'Artem',
   to: 'dvd1',
@@ -33,7 +35,7 @@ const user2 = {
     isReaded: false,
     isEdited: false,
   },
-};
+}; */
 
 export default class MainPage extends Page {
   header: Header;
@@ -65,6 +67,10 @@ export default class MainPage extends Page {
 
     chatSocket.updateStatusDialogUser = (isLogined: boolean) => {
       this.updateSelectedUser(isLogined);
+    };
+
+    chatSocket.onMessage = (message: Message) => {
+      this.displaySendingMessage(message);
     };
 
     this.form.addEventListener('submit', this.submitForm);
@@ -111,18 +117,28 @@ export default class MainPage extends Page {
       const status = dom.create({ tag: 'p', classNames: ['main__companion-status'] });
       status.classList.add(user.isLogined ? 'online' : 'offline');
       status.textContent = user.isLogined ? 'online' : 'offline';
-
       header.append(name, status);
-      const content = dom.create({ tag: 'div', classNames: ['chat'] });
-      const message = this.createMessage(user1);
-      const message2 = this.createMessage(user2);
 
-      content.append(message, message2);
+      const chat = dom.create({ tag: 'div', classNames: ['chat'] });
+      const messages = chatSocket.messages[chatSocket.selectedUser];
+
+      console.log(chatSocket.selectedUser);
+
+      if (!messages) {
+        const welcome = dom.create({ tag: 'p', text: 'Write your first message!' });
+        welcome.classList.add('chat__info');
+        chat.append(welcome);
+      } else {
+        messages.forEach((message) => {
+          const messageElement = this.createMessage(message);
+          chat.append(messageElement);
+        });
+      }
 
       this.inputField.placeholder = 'Write a message...';
       this.inputField.name = 'dialog-input';
       this.form.append(this.inputField, this.btnSend);
-      this.main.append(header, content, this.form);
+      this.main.append(header, chat, this.form);
     } else {
       const hint = dom.create({ tag: 'p', text: 'Select a user to send the message...' });
       hint.classList.add('main__info');
@@ -171,6 +187,11 @@ export default class MainPage extends Page {
     const formData = new FormData(event.target);
     const input = String(formData.get('dialog-input'));
 
+    if (this.inputField.value === '') {
+      this.inputField.focus();
+      return;
+    }
+
     chatSocket.sendMessage(input);
     this.inputField.value = '';
   };
@@ -202,6 +223,19 @@ export default class MainPage extends Page {
     status.textContent = isLogined ? 'online' : 'offline';
     status.classList.toggle('online', isLogined);
     status.classList.toggle('offline', !isLogined);
+  }
+
+  displaySendingMessage(message: Message) {
+    const chat = this.main.querySelector('.chat');
+    if (!chat) return;
+
+    const welcomeElement = document.querySelector('.chat__info');
+    if (welcomeElement) {
+      welcomeElement.remove();
+    }
+
+    const messageElement = this.createMessage(message);
+    chat.append(messageElement);
   }
 
   render() {

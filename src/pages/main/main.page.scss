@@ -57,6 +57,11 @@
   overflow-y: auto;
   // overflow-y: hidden;
 
+  &__info {
+    margin-top: 6rem;
+    text-align: center;
+  }
+
   &__message {
     position: relative;
     padding: 0.5rem 1.5rem;

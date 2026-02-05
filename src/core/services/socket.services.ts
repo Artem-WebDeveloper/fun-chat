@@ -18,6 +18,7 @@ class ChatSocket {
   onServerError?: (message: string) => void;
   updateUsers?: (allUsers: Record<string, User>) => void;
   updateStatusDialogUser?: (isLogined: boolean) => void;
+  onMessage?: (message: Message) => void;
 
   onConnectionChange?: (connected: boolean) => void;
 
@@ -96,11 +97,14 @@ class ChatSocket {
       }
 
       if (data.type === 'MSG_SEND') {
-        if (!this.selectedUser) return;
+        const message: Message = data.payload.message;
+        const dialogUser = message.from === this.curUser ? message.to : message.from;
 
-        (this.messages[this.selectedUser] ??= []).push(data.payload.message);
+        (this.messages[dialogUser] ??= []).push(message);
 
-        console.log(this.messages);
+        if (dialogUser === this.selectedUser) {
+          this.onMessage?.(message);
+        }
       }
     };
 
@@ -206,13 +210,6 @@ class ChatSocket {
     this.otherUsers[login] = {
       ...this.otherUsers[login],
       ...user,
-    };
-  }
-
-  private updateMessages(login: string, message: Message) {
-    this.messages[login] = {
-      ...this.messages[login],
-      ...message,
     };
   }
 
