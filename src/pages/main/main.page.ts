@@ -5,37 +5,9 @@ import Page from '../../core/templates/page';
 import chatSocket from '../../core/services/socket.services';
 
 import './main.page.scss';
-import type { Message, User } from '../../app/types';
+import type { Message, StatusMessage, User } from '../../app/types';
 import formatDate from '../../core/utils/formatDate';
 import getStatusMessage from '../../core/utils/getStatusMessage';
-
-// FOR CHECKING
-/*  
-  const user1 = {
-  id: '220d350f-c1a1-4b5f-8d8c-3b9dc52a38eb_1770233935189',
-  from: 'Artem',
-  to: 'dvd1',
-  text: 'Asfds',
-  datetime: 1770233935189,
-  status: {
-    isDelivered: false,
-    isReaded: false,
-    isEdited: false,
-  },
-};
-
-const user2 = {
-  id: '220d350f-c1a1-4b5f-8d8c-3b9dc52a38eb_1770233935189',
-  from: 'dvd1',
-  to: 'Artem',
-  text: 'Asfds',
-  datetime: 1770233937189,
-  status: {
-    isDelivered: false,
-    isReaded: false,
-    isEdited: false,
-  },
-}; */
 
 export default class MainPage extends Page {
   header: Header;
@@ -61,6 +33,13 @@ export default class MainPage extends Page {
       text: '⮝',
     });
 
+    this.inputField.addEventListener('keydown', (event) => {
+      if (event.key === 'Enter' && !event.shiftKey) {
+        event.preventDefault();
+        this.form.requestSubmit();
+      }
+    });
+
     chatSocket.updateUsers = (otherUsers: Record<string, User>) => {
       this.renderSidebar(otherUsers);
     };
@@ -71,11 +50,40 @@ export default class MainPage extends Page {
 
     chatSocket.onMessage = (message: Message) => {
       this.displaySendingMessage(message);
+      if (message.from !== chatSocket.curUser) {
+        chatSocket.sendReadStatus();
+      }
+    };
+
+    chatSocket.onHistory = () => {
+      this.renderMain();
+    };
+
+    chatSocket.onMessageStatus = (id: string, status: StatusMessage) => {
+      const statusMessages = this.main.querySelectorAll(
+        `.chat__message-status[data-message-id="${id}"]`,
+      );
+      console.log(statusMessages, status);
+      statusMessages.forEach((message) => {
+        message.textContent = getStatusMessage(status, true);
+      });
     };
 
     this.form.addEventListener('submit', this.submitForm);
 
     this.sidebar.addEventListener('click', this.selectDialog);
+
+    //TODO добавить событий кроме клика, которые будут тригерить изменения статуса
+    this.main.addEventListener('click', (event) => {
+      const target = event.target;
+      if (!(target instanceof HTMLElement)) return;
+      if (!target.closest('.main')) return;
+
+      const separator = document.querySelector('.chat__separator');
+      if (separator) separator.remove();
+
+      chatSocket.sendReadStatus();
+    });
   }
 
   renderSidebar(otherUsers: Record<string, User>) {
@@ -84,26 +92,31 @@ export default class MainPage extends Page {
     const users = Object.keys(otherUsers);
 
     users.forEach((user) => {
-      const { login, isLogined } = otherUsers[user];
-      const userElement = this.createUser(login, isLogined);
+      const { login, isLogined, unreadCount } = otherUsers[user];
+      const userElement = this.createUser(login, isLogined, unreadCount);
       usersList.append(userElement);
     });
 
     this.sidebar.append(usersList);
   }
 
-  createUser(login: string, isLogined: boolean) {
+  createUser(login: string, isLogined: boolean, unreadCount?: number) {
     const user = dom.create({ tag: 'div', classNames: ['users__item'] });
     user.dataset.user = login;
     if (chatSocket.selectedUser === login) user.classList.add('users__item--active');
 
     const userName = dom.create({ tag: 'p', classNames: ['users__name'], text: login });
     const userStatus = dom.create({ tag: 'div', classNames: ['users__status'] });
-    const messages = dom.create({ tag: 'p', classNames: ['users__messages'], text: String(23) });
+    const messages = dom.create({ tag: 'p', classNames: ['users__messages'] });
 
     userStatus.style.backgroundColor = isLogined ? 'green' : 'red';
+    user.append(userStatus, userName);
 
-    user.append(userStatus, userName, messages);
+    if (unreadCount) {
+      messages.textContent = String(unreadCount);
+      user.append(messages);
+    }
+
     return user;
   }
 
@@ -124,12 +137,22 @@ export default class MainPage extends Page {
 
       console.log(chatSocket.selectedUser);
 
-      if (!messages) {
+      if (!messages || messages.length === 0) {
         const welcome = dom.create({ tag: 'p', text: 'Write your first message!' });
         welcome.classList.add('chat__info');
         chat.append(welcome);
       } else {
-        messages.forEach((message) => {
+        const firstUnreadIndex = messages.findIndex((message) => {
+          return !message.status.isReaded && message.from !== chatSocket.curUser;
+        });
+
+        messages.forEach((message, i) => {
+          if (i === firstUnreadIndex) {
+            const separator = dom.create({ tag: 'div', classNames: ['chat__separator'] });
+            separator.textContent = 'New Messages';
+            chat.append(separator);
+          }
+
           const messageElement = this.createMessage(message);
           chat.append(messageElement);
         });
@@ -147,7 +170,7 @@ export default class MainPage extends Page {
   }
 
   createMessage(message: Message) {
-    const { from, text, datetime, status } = message;
+    const { id, from, text, datetime, status } = message;
     const isMine = from === chatSocket.curUser;
 
     const wrap = dom.create({ tag: 'div', classNames: ['chat__message'] });
@@ -168,6 +191,7 @@ export default class MainPage extends Page {
       classNames: ['chat__message-status'],
       text: getStatusMessage(status, isMine),
     });
+    statusElement.dataset.messageId = id;
 
     if (status.isEdited) {
       statusElement.textContent += ' (edited)';
@@ -181,8 +205,8 @@ export default class MainPage extends Page {
   }
 
   submitForm = (event: Event) => {
-    if (!(event.target instanceof HTMLFormElement)) return;
     event.preventDefault();
+    if (!(event.target instanceof HTMLFormElement)) return;
 
     const formData = new FormData(event.target);
     const input = String(formData.get('dialog-input'));
@@ -214,6 +238,12 @@ export default class MainPage extends Page {
 
     chatSocket.setSelectedUser(user);
     this.renderMain();
+
+    setTimeout(() => {
+      const separator = document.querySelector('.chat__separator');
+      if (separator) this.scrollToUnreadMessage();
+      else this.scrollToBottom();
+    }, 5);
   };
 
   updateSelectedUser(isLogined: boolean) {
@@ -236,6 +266,33 @@ export default class MainPage extends Page {
 
     const messageElement = this.createMessage(message);
     chat.append(messageElement);
+    chat.scrollTo({
+      top: chat.scrollHeight,
+      behavior: 'smooth',
+    });
+  }
+
+  scrollToUnreadMessage() {
+    const chat = document.querySelector('.chat');
+    const separator = document.querySelector('.chat__separator');
+    if (!(chat instanceof HTMLElement) || !(separator instanceof HTMLElement)) return;
+    const topPadding = 20;
+
+    const to = separator.offsetTop - chat.offsetTop - topPadding;
+    chat.scrollTo({
+      top: to,
+      behavior: 'smooth',
+    });
+  }
+
+  scrollToBottom() {
+    const chat = document.querySelector('.chat');
+    if (!(chat instanceof HTMLElement)) return;
+
+    chat.scrollTo({
+      top: chat.scrollHeight,
+      behavior: 'smooth',
+    });
   }
 
   render() {

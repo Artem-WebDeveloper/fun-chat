@@ -1,4 +1,11 @@
-import { PageIDs, type CurrentUser, type Message, type User } from '../../app/types';
+import {
+  PageIDs,
+  type CurrentUser,
+  type Message,
+  type StatusMessage,
+  type User,
+} from '../../app/types';
+import generateId from '../utils/generateId';
 import navigate from '../utils/navigate';
 
 const BASE_URL = import.meta.env.VITE_API_URL;
@@ -12,6 +19,8 @@ class ChatSocket {
   curPassword: string | null = null;
 
   otherUsers: Record<string, User> = {};
+  unreadCountRequests: Record<string, string> = {};
+
   messages: Record<string, Message[]> = {};
   selectedUser: null | string = null;
 
@@ -19,6 +28,8 @@ class ChatSocket {
   updateUsers?: (allUsers: Record<string, User>) => void;
   updateStatusDialogUser?: (isLogined: boolean) => void;
   onMessage?: (message: Message) => void;
+  onMessageStatus?: (messageId: string, status: StatusMessage) => void;
+  onHistory?: () => void;
 
   onConnectionChange?: (connected: boolean) => void;
 
@@ -50,6 +61,7 @@ class ChatSocket {
       if (data.type === 'USER_LOGOUT' && !data.payload.user.isLogined) {
         this.handleUserlogout();
         this.clearAuth();
+        this.clearSession();
       }
 
       if (data.type === 'ERROR' && data.payload.error) {
@@ -65,6 +77,7 @@ class ChatSocket {
         }
 
         this.updateUser(user.login, user);
+        this.fetchUnreadCount(user.login);
         this.updateUsers?.({ ...this.otherUsers });
       }
 
@@ -91,6 +104,8 @@ class ChatSocket {
           if (user.login === this.selectedUser) {
             this.updateStatusDialogUser?.(user.isLogined);
           }
+          this.fetchUnreadCount(user.login);
+          this.fetchHistoryMessages(user.login);
         });
 
         this.updateUsers?.({ ...this.otherUsers });
@@ -104,7 +119,61 @@ class ChatSocket {
 
         if (dialogUser === this.selectedUser) {
           this.onMessage?.(message);
+        } else {
+          this.fetchUnreadCount(dialogUser);
         }
+      }
+
+      if (data.type === 'MSG_FROM_USER') {
+        const historyMessages: Message[] = data.payload.messages;
+        if (this.selectedUser) {
+          this.messages[this.selectedUser] = historyMessages;
+          this.onHistory?.();
+        }
+      }
+
+      if (data.type === 'MSG_COUNT_NOT_READED_FROM_USER') {
+        const login = this.unreadCountRequests[data.id];
+
+        if (login && this.otherUsers[login]) {
+          this.otherUsers[login].unreadCount = data.payload.count;
+          this.updateUsers?.({ ...this.otherUsers });
+
+          delete this.unreadCountRequests[data.id];
+        }
+      }
+
+      if (data.type === 'MSG_DELIVER') {
+        const messageId = data.payload.message.id;
+        const status = data.payload.message.status;
+
+        Object.keys(this.messages).forEach((dialogUser) => {
+          const message = this.messages[dialogUser].find((message) => message.id === messageId);
+          if (message) {
+            message.status.isDelivered = status.isDelivered;
+            if (dialogUser === this.selectedUser && message.from === this.curUser) {
+              this.onMessageStatus?.(message.id, message.status);
+            }
+          }
+        });
+      }
+
+      if (data.type === 'MSG_READ') {
+        const messageId = data.payload.message.id;
+        const status = data.payload.message.status;
+
+        Object.keys(this.messages).forEach((dialogUser) => {
+          const message = this.messages[dialogUser].find((message) => message.id === messageId);
+          if (message) {
+            message.status.isReaded = status.isReaded;
+            if (dialogUser === this.selectedUser) {
+              this.fetchUnreadCount(this.selectedUser);
+            }
+            if (message.from === this.curUser) {
+              this.onMessageStatus?.(message.id, message.status);
+            }
+          }
+        });
       }
     };
 
@@ -121,6 +190,8 @@ class ChatSocket {
       }
       this.setConnectionState(false);
       this.socket = null;
+      this.clearAuth();
+      this.clearSession();
     };
   }
 
@@ -131,7 +202,7 @@ class ChatSocket {
     }
 
     const loginData = {
-      id: String(Date.now()),
+      id: generateId(user.login),
       type: 'USER_LOGIN',
       payload: {
         user,
@@ -147,8 +218,9 @@ class ChatSocket {
       console.warn('WebSocket not connected');
       return;
     }
+
     const loginData = {
-      id: String(Date.now()),
+      id: generateId(this.curUser || 'login'),
       type: 'USER_LOGOUT',
       payload: {
         user: {
@@ -167,13 +239,13 @@ class ChatSocket {
       return;
     }
     const loginDataActive = {
-      id: String(Date.now()),
+      id: generateId('active'),
       type: 'USER_ACTIVE',
       payload: null,
     };
 
     const loginDataInActive = {
-      id: String(Date.now()),
+      id: generateId('inActive'),
       type: 'USER_INACTIVE',
       payload: null,
     };
@@ -188,12 +260,54 @@ class ChatSocket {
       return;
     }
     const data = {
-      id: String(Date.now()),
+      id: generateId(this.curUser || 'login'),
       type: 'MSG_SEND',
       payload: {
         message: {
           to: this.selectedUser,
           text: message,
+        },
+      },
+    };
+    this.socket.send(JSON.stringify(data));
+  }
+
+  sendReadStatus() {
+    if (!this.socket || this.socket.readyState !== WebSocket.OPEN) {
+      console.warn('WebSocket not connected');
+      return;
+    }
+    if (!this.selectedUser) return;
+
+    const unReadMessages = this.messages[this.selectedUser].filter(
+      (message) => message.status.isReaded !== true && message.from !== this.curUser,
+    );
+
+    unReadMessages.forEach((message) => {
+      const data = {
+        id: generateId(this.selectedUser || ''),
+        type: 'MSG_READ',
+        payload: {
+          message: {
+            id: message.id,
+          },
+        },
+      };
+      if (this.socket) this.socket.send(JSON.stringify(data));
+    });
+  }
+
+  fetchHistoryMessages(login: string) {
+    if (!this.socket || this.socket.readyState !== WebSocket.OPEN) {
+      console.warn('WebSocket not connected');
+      return;
+    }
+    const data = {
+      id: generateId(login),
+      type: 'MSG_FROM_USER',
+      payload: {
+        user: {
+          login,
         },
       },
     };
@@ -206,6 +320,13 @@ class ChatSocket {
     this.isAuthorized = false;
   }
 
+  private clearSession() {
+    this.selectedUser = null;
+    this.messages = {};
+    this.otherUsers = {};
+    this.unreadCountRequests = {};
+  }
+
   private updateUser(login: string, user: User) {
     this.otherUsers[login] = {
       ...this.otherUsers[login],
@@ -215,6 +336,28 @@ class ChatSocket {
 
   public setSelectedUser(user: string) {
     this.selectedUser = user;
+    // this.fetchHistoryMessages(user);
+
+    if (!this.messages[user] || this.messages[user].length === 0) {
+      this.fetchHistoryMessages(user);
+    } else {
+      this.onHistory?.();
+    }
+  }
+
+  fetchUnreadCount(login: string) {
+    if (!this.socket || this.socket.readyState !== WebSocket.OPEN) return;
+
+    const data = {
+      id: generateId(login),
+      type: 'MSG_COUNT_NOT_READED_FROM_USER',
+      payload: {
+        user: { login },
+      },
+    };
+
+    this.unreadCountRequests[data.id] = login;
+    this.socket.send(JSON.stringify(data));
   }
 
   handleUserlogin() {

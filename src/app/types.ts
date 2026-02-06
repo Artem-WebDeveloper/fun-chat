@@ -15,7 +15,7 @@ export type IconOptions = {
   color?: string;
 };
 
-export type User = { login: string; isLogined: boolean };
+export type User = { login: string; isLogined: boolean; unreadCount?: number };
 
 export type Message = {
   id: string;
