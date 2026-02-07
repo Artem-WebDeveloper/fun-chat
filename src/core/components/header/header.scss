@@ -16,6 +16,10 @@
 
     & div {
       transform: translateY(3px);
+      // 450px
+      @media (max-width: 28.125em) {
+        display: none;
+      }
     }
   }
 
@@ -31,6 +35,14 @@
 
     & div {
       transform: translateY(2px);
+
+      & svg {
+        // 450px
+        @media (max-width: 28.125em) {
+          width: 2.5rem;
+          height: 2.5rem;
+        }
+      }
     }
   }
 }

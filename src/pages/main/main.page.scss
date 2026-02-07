@@ -29,6 +29,8 @@
 }
 .main {
   position: relative;
+  border-top-right-radius: 2rem;
+  border-bottom-right-radius: 2rem;
   grid-area: main;
   background-color: rgba(255, 255, 255, 0.1);
   padding: 2rem 3rem;
@@ -84,6 +86,16 @@
     position: relative;
     padding: 0.5rem 1.5rem;
     width: 57%;
+
+    // 900px
+    @media (max-width: 56.25em) {
+      width: 77%;
+    }
+
+    // 700px
+    @media (max-width: 43.75em) {
+      width: 100%;
+    }
     background: rgba(255, 255, 255, 0.3);
     backdrop-filter: blur(2rem) saturate(1.1);
     border-radius: 2.4rem;
@@ -272,6 +284,8 @@
   grid-area: sidebar;
   background-color: rgba(255, 255, 255, 0.1);
   overflow-y: auto;
+  border-top-left-radius: 2rem;
+  border-bottom-left-radius: 2rem;
 
   padding: 1rem;
 }

@@ -35,6 +35,21 @@ html {
   scroll-behavior: smooth;
 
   font-size: 62.5%;
+
+  // 800px
+  @media (max-width: 50em) {
+    font-size: 54.25%;
+  }
+
+  // 550px
+  @media (max-width: 34.37em) {
+    font-size: 50%;
+  }
+
+  // 450px
+  @media (max-width: 28.125em) {
+    font-size: 40%;
+  }
 }
 
 body {
