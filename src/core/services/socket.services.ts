@@ -13,6 +13,7 @@ const BASE_URL = import.meta.env.VITE_API_URL;
 class ChatSocket {
   socket: null | WebSocket = null;
   isConnected: boolean = false;
+  reconnectTimer: number | null = null;
 
   isAuthorized: boolean = false;
   curUser: null | string = null;
@@ -25,11 +26,14 @@ class ChatSocket {
   deletedMessageIds: Set<string> = new Set();
   selectedUser: null | string = null;
 
-  onServerError?: (message: string) => void;
+  SEC_TRY_RECONNECT = 4;
+
+  onServerError?: (message: string, isResolved?: boolean) => void;
   updateUsers?: (allUsers: Record<string, User>) => void;
   updateStatusDialogUser?: (isLogined: boolean) => void;
   onMessage?: (message: Message) => void;
   onDeleteMessage?: (id: string) => void;
+  onMessageEdit?: (id: string, text: string) => void;
   onMessageStatus?: (messageId: string, status: StatusMessage) => void;
   onHistory?: () => void;
 
@@ -47,6 +51,12 @@ class ChatSocket {
     this.socket.onopen = () => {
       console.log('[OPEN] Connection established!');
       this.setConnectionState(true);
+
+      if (this.curUser && this.curPassword) {
+        const user = { login: this.curUser, password: this.curPassword };
+        this.loginUser(user);
+        this.onServerError?.('Connection restored!', true);
+      }
     };
 
     this.socket.onmessage = (event) => {
@@ -136,7 +146,7 @@ class ChatSocket {
           console.log(this.messages);
 
           // this.messages[this.selectedUser] = historyMessages.filter((message) => {});
-
+          console.log(this.messages);
           this.onHistory?.();
         }
       }
@@ -199,6 +209,23 @@ class ChatSocket {
 
         this.onDeleteMessage?.(messageId);
       }
+
+      if (data.type === 'MSG_EDIT') {
+        const messageId = data.payload.message.id;
+        const text = data.payload.message.text;
+        const status = data.payload.message.status;
+        Object.keys(this.messages).forEach((dialogUser) => {
+          this.messages[dialogUser] = this.messages[dialogUser].map((message) => {
+            if (message.id === messageId) {
+              message.text = text;
+              message.status.isEdited = status.isEdited;
+            }
+            return message;
+          });
+        });
+
+        this.onMessageEdit?.(messageId, text);
+      }
     };
 
     this.socket.onerror = (error) => {
@@ -207,15 +234,13 @@ class ChatSocket {
     };
 
     this.socket.onclose = (event) => {
-      if (event.wasClean) {
-        console.log(`[CLOSE] The connection was closed clean, code: ${event.code}`);
-      } else {
-        console.log(`[CLOSE] The connection was interrupted`);
+      if (!event.wasClean) {
+        this.onServerError?.('Connection lost! Try to restore...');
+        this.tryReconnect();
       }
+
       this.setConnectionState(false);
       this.socket = null;
-      this.clearAuth();
-      this.clearSession();
     };
   }
 
@@ -403,6 +428,25 @@ class ChatSocket {
     this.socket.send(JSON.stringify(data));
   }
 
+  editMessage(id: string, text: string) {
+    if (!this.socket || this.socket.readyState !== WebSocket.OPEN) {
+      console.warn('WebSocket not connected');
+      return;
+    }
+    const data = {
+      id,
+      type: 'MSG_EDIT',
+      payload: {
+        message: {
+          id,
+          text,
+        },
+      },
+    };
+
+    this.socket.send(JSON.stringify(data));
+  }
+
   handleUserlogin() {
     console.log('Login succes');
     navigate(PageIDs.MAIN_PAGE);
@@ -412,6 +456,14 @@ class ChatSocket {
   handleUserlogout() {
     console.log('Logout succes');
     navigate(PageIDs.LOGIN_PAGE);
+  }
+
+  private tryReconnect() {
+    if (this.reconnectTimer !== null) clearTimeout(this.reconnectTimer);
+    this.reconnectTimer = window.setTimeout(() => {
+      this.connect();
+      this.reconnectTimer = null;
+    }, this.SEC_TRY_RECONNECT * 1000);
   }
 }
 

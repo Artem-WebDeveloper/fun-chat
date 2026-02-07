@@ -20,6 +20,8 @@ export default class MainPage extends Page {
   btnSend: HTMLButtonElement;
   inputField: HTMLTextAreaElement;
 
+  editMessageId: string | null = null;
+
   constructor(id: string) {
     super(id);
     this.header = new Header();
@@ -77,11 +79,24 @@ export default class MainPage extends Page {
       if (message && message instanceof HTMLElement) message.remove();
     };
 
+    chatSocket.onMessageEdit = (id: string, text: string) => {
+      const message = this.main.querySelector(`.chat__message[data-message-id="${id}"]`);
+      const messageText = message?.querySelector('.chat__message-content');
+      const status = message?.querySelector('.chat__message-status');
+      if (message && messageText) messageText.textContent = text;
+      if (status && !status.textContent?.includes('edited')) {
+        status.textContent += ' (edited)';
+      }
+    };
+
+    chatSocket.onServerError = (message: string, isResolved?: boolean) => {
+      this.showServerError(message, isResolved);
+    };
+
     this.form.addEventListener('submit', this.submitForm);
 
     this.sidebar.addEventListener('click', this.selectDialog);
 
-    //TODO добавить событий кроме клика, которые будут тригерить изменения статуса
     this.main.addEventListener('click', (event) => {
       const target = event.target;
       if (!(target instanceof HTMLElement)) return;
@@ -99,7 +114,7 @@ export default class MainPage extends Page {
 
       const editButton = target.closest('.chat__message-edit');
       if (editButton) {
-        console.log('edit!');
+        this.onEdeting(editButton);
         event.stopPropagation();
         return;
       }
@@ -110,6 +125,33 @@ export default class MainPage extends Page {
 
       chatSocket.sendReadStatus();
     });
+  }
+
+  onEdeting(editButton: Element) {
+    const message = editButton.closest('.chat__message');
+    const id = message?.getAttribute('data-message-id');
+    const text = message?.querySelector('.chat__message-content')?.textContent;
+    if (text && id) {
+      this.inputField.value = text;
+      this.inputField.focus();
+      this.inputField.select();
+      this.editMessageId = id || null;
+
+      if (!this.form.querySelector('.form-dialog__cancel-btn')) {
+        const cancelButton = deleteIcon({ size: 20 });
+        cancelButton.className = 'form-dialog__cancel-btn';
+
+        cancelButton.addEventListener('click', () => {
+          this.editMessageId = null;
+          cancelButton.remove();
+          this.inputField.value = '';
+          this.inputField.blur();
+          this.inputField.placeholder = 'Write a message...';
+        });
+
+        this.form.append(cancelButton);
+      }
+    }
   }
 
   renderSidebar(otherUsers: Record<string, User>) {
@@ -160,8 +202,6 @@ export default class MainPage extends Page {
 
       const chat = dom.create({ tag: 'div', classNames: ['chat'] });
       const messages = chatSocket.messages[chatSocket.selectedUser];
-
-      console.log(chatSocket.selectedUser);
 
       if (!messages || messages.length === 0) {
         const welcome = dom.create({ tag: 'p', text: 'Write your first message!' });
@@ -219,10 +259,6 @@ export default class MainPage extends Page {
       text: getStatusMessage(status, isMine),
     });
 
-    if (status.isEdited) {
-      statusElement.textContent += ' (edited)';
-    }
-
     const deleteElement = deleteIcon({ size: 14 });
     deleteElement.className = 'chat__message-delete';
     const editElement = editIcon({ size: 15 });
@@ -251,7 +287,14 @@ export default class MainPage extends Page {
       return;
     }
 
-    chatSocket.sendMessage(input);
+    if (this.editMessageId) {
+      chatSocket.editMessage(this.editMessageId, input);
+      this.form.querySelector('.form-dialog__cancel-btn')?.remove();
+      this.editMessageId = null;
+    } else {
+      chatSocket.sendMessage(input);
+    }
+
     this.inputField.value = '';
   };
 
@@ -270,6 +313,11 @@ export default class MainPage extends Page {
 
     const user = item.dataset.user;
     if (!user) return;
+
+    this.editMessageId = null;
+    this.form.querySelector('.form-dialog__cancel-btn')?.remove();
+    this.inputField.value = '';
+    this.inputField.placeholder = 'Write a message...';
 
     chatSocket.setSelectedUser(user);
     this.renderMain();

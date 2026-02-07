@@ -60,26 +60,7 @@ export default class App {
   }
 
   run() {
-    // this.renderPage(PageIDs.MAIN_PAGE);
     this.enableRouteChange();
     chatSocket.connect();
-
-    /*  this.showLoader();
-    chatSocket.onConnectionChange = (connected) => {
-      if (connected) {
-        this.hideLoader();
-      } else {
-        this.showLoader();
-      }
-    };
-  }
-  showLoader() {
-    const loader = dom.create({ tag: 'div', classNames: ['loader'] });
-    this.container.append(loader);
-  }
-  hideLoader() {
-    const loader = document.querySelector('.loader');
-    if (loader) loader.remove();
-  } */
   }
 }

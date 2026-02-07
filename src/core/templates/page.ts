@@ -9,12 +9,15 @@ export default abstract class Page {
     this.container = dom.create({ tag: 'div', id: id });
   }
 
-  showServerError(message: string) {
+  showServerError(message: string, isErrorSolved?: boolean) {
     message = `⚠️ ${message[0].toUpperCase()}${message.slice(1)}`;
 
     if (this.container.querySelector('.server-error__modal')) return;
 
     const modal = dom.create({ tag: 'div', classNames: ['server-error__modal'] });
+    if (isErrorSolved) {
+      modal.classList.add('server-error__modal--resolved');
+    }
     modal.innerHTML = message;
 
     this.container.append(modal);

@@ -193,6 +193,10 @@ a {
 
   animation: errorServer 2s ease;
   opacity: 0;
+
+  &--resolved {
+    border-left: 3px solid #48ffc4;
+  }
 }
 
 @keyframes loading {
