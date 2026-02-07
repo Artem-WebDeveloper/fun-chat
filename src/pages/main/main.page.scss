@@ -54,11 +54,71 @@
   }
 }
 
+.online,
+.offline {
+  pointer-events: none;
+  user-select: none;
+  font-size: 1.4rem;
+  font-weight: 600;
+  padding: 0.4rem 1.15rem 0.4rem 1rem;
+  border-radius: 2rem;
+  transition: all 0.3s ease;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  // text-transform: uppercase;
+  letter-spacing: 0.6px;
+}
+
+.online {
+  color: #fff;
+  background: linear-gradient(135deg, #4dd4ac 0%, #3bc199 100%);
+  box-shadow:
+    0 0 1.5rem rgba(77, 212, 172, 0.4),
+    0 0.3rem 0.8rem rgba(77, 212, 172, 0.2),
+    inset 0 1px 0 rgba(255, 255, 255, 0.3);
+  text-shadow: 0 0 0.8rem rgba(77, 212, 172, 0.5);
+
+  &::before {
+    content: '●';
+    font-size: 1.2rem;
+    animation: pulse-dot-online 3.8s ease-in-out infinite;
+  }
+}
+.offline {
+  color: rgba(255, 255, 255, 0.7);
+  background: rgba(136, 136, 136, 0.3);
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.1);
+  &::before {
+    content: '○';
+    font-size: 1.2rem;
+    opacity: 0.6;
+  }
+}
+
 .chat {
   // flex: 1;
   padding: 1.5rem 2rem 1.5rem 0;
   overflow-y: auto;
   // overflow-y: hidden;
+
+  &::-webkit-scrollbar {
+    width: 0.8rem;
+  }
+  &::-webkit-scrollbar-track {
+    background: rgba(248, 248, 248, 0.18);
+    // border-radius: 2rem;
+  }
+
+  &::-webkit-scrollbar-thumb {
+    background: linear-gradient(180deg, #90bae1, #6b9fd4);
+    border-radius: 0.1rem;
+    transition: background 0.25s ease;
+  }
+
+  &::-webkit-scrollbar-thumb:hover {
+    background: linear-gradient(180deg, #a6c9ea, #6b9fd4);
+  }
 
   &__info {
     margin-top: 6rem;
@@ -84,7 +144,7 @@
 
   &__message {
     position: relative;
-    padding: 0.5rem 1.5rem;
+    padding: 0.5rem 0;
     width: 57%;
 
     // 900px
@@ -96,19 +156,24 @@
     @media (max-width: 43.75em) {
       width: 100%;
     }
-    background: rgba(255, 255, 255, 0.3);
+
     backdrop-filter: blur(2rem) saturate(1.1);
     border-radius: 2.4rem;
-    border-bottom-right-radius: 0;
+
     box-shadow: 0 0 1rem rgba(0, 0, 0, 0.06);
     justify-self: end;
     margin-bottom: 2rem;
+
+    background: linear-gradient(135deg, #90bae1 0%, #6b9fd4 100%);
+    box-shadow:
+      0 0.4rem 1.2rem rgba(94, 126, 185, 0.3),
+      0 0 0 1px rgba(255, 255, 255, 0.1) inset;
 
     @media (hover: hover) and (pointer: fine) {
       &:hover {
         .chat__message-delete,
         .chat__message-edit {
-          opacity: 0.5;
+          opacity: 0.85;
           &:hover {
             cursor: pointer;
             opacity: 1;
@@ -121,26 +186,22 @@
     &::after {
       content: '';
       position: absolute;
-      bottom: -0.6rem;
-      right: 0rem;
-
-      width: 1.8rem;
-      height: 0.6rem;
-
-      background: rgba(255, 255, 255, 0.3);
-      backdrop-filter: blur(2rem) saturate(1.1);
-
-      border-radius: 0 0 0 1.2rem;
     }
 
     &--companion {
       justify-self: start;
-      border-bottom-right-radius: 2.4rem;
-      border-bottom-left-radius: 0;
+      background: linear-gradient(
+        135deg,
+        rgba(195, 177, 225, 0.35) 0%,
+        rgba(195, 177, 225, 0.18) 100%
+      );
 
       &::after {
         left: 0;
-        border-radius: 0 0 1.2rem 0;
+      }
+
+      & .chat__message-from {
+        color: #e8dcff;
       }
     }
   }
@@ -149,32 +210,45 @@
     display: flex;
     justify-content: space-between;
     align-items: baseline;
+    padding: 0 1.5rem;
   }
 
   &__message-footer {
     display: flex;
     align-items: center;
     gap: 0.1rem;
+    padding: 0 1.5rem;
   }
 
   &__message-from {
-    font-weight: 500;
+    font-weight: 700;
+    font-size: 1.35rem;
+    color: rgba(255, 255, 255, 0.9);
+    letter-spacing: 0.2px;
+    text-transform: uppercase;
   }
 
   &__message-date {
     color: #322d68;
-    font-weight: 600;
-    font-size: 1.4rem;
+    color: rgba(50, 45, 104, 0.85);
+
+    font-size: 1.2rem;
+    font-weight: 500;
+    // color: rgba(255, 255, 255, 0.65);
   }
 
   &__message-content {
-    background: #fff;
+    // background: #fff;
     font-size: 1.65rem;
     color: #3d3b3b;
     width: 100%;
     padding: 1rem 1.5rem;
     white-space: pre-wrap;
     word-break: break-word;
+
+    line-height: 1.5;
+    color: #fff;
+    font-weight: 400;
   }
 
   &__message-status {
@@ -188,6 +262,8 @@
     font-weight: 300;
     color: rgba(244, 232, 232, 0.885);
     color: #3d3b3b;
+    font-size: 1.45rem;
+    color: rgba(255, 255, 255, 0.7);
     // backdrop-filter: blur(2rem);
   }
 
@@ -205,7 +281,7 @@
   }
 
   &__message-delete {
-    color: #ff8e8e;
+    color: #e07c7c;
   }
   &__message-edit {
     color: #fff;
@@ -236,6 +312,7 @@
       box-shadow 0.1s ease,
       min-height 0.25s;
 
+    background: #fafafa;
     &:focus {
       min-height: 6.7rem;
       outline: none;
@@ -287,7 +364,33 @@
   border-top-left-radius: 2rem;
   border-bottom-left-radius: 2rem;
 
-  padding: 1rem;
+  padding: 0;
+
+  &::-webkit-scrollbar {
+    width: 0.7rem;
+  }
+  &::-webkit-scrollbar-track {
+    background: rgba(248, 248, 248, 0.18);
+    // border-radius: 2rem;
+  }
+
+  &::-webkit-scrollbar-thumb {
+    background: linear-gradient(
+      135deg,
+      rgba(195, 177, 225, 0.35) 0%,
+      rgba(195, 177, 225, 0.18) 100%
+    );
+    border-radius: 0.1rem;
+    transition: background 0.25s ease;
+  }
+
+  &::-webkit-scrollbar-thumb:hover {
+    background: linear-gradient(
+      135deg,
+      rgba(195, 177, 225, 0.65) 0%,
+      rgba(195, 177, 225, 0.38) 100%
+    );
+  }
 }
 .footer {
   grid-area: footer;
@@ -304,10 +407,14 @@
   &__item {
     cursor: pointer;
     display: flex;
-    padding: 1rem 2rem 1rem 1rem;
+    padding: 1rem 2rem 1rem 2rem;
     align-items: center;
     gap: 1rem;
     transition: background 0.1s;
+
+    &:first-child {
+      border-top-left-radius: 1.2rem;
+    }
 
     &--active {
       background-color: rgba(166, 201, 234, 0.45);
@@ -342,9 +449,12 @@
   }
 }
 
-.online {
-  color: #4ddc7b;
-}
-.offline {
-  color: #db6c47;
+@keyframes pulse-dot-online {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.5;
+  }
 }

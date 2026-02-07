@@ -16,11 +16,7 @@ export default class Header {
 
   constructor() {
     this.container = dom.create({ tag: 'header', classNames: ['header'] });
-    this.btnLogout = dom.create({
-      tag: 'button',
-      classNames: ['btn', 'header__btn'],
-      text: 'Logout',
-    });
+    this.btnLogout = dom.create({ tag: 'button', classNames: ['btn', 'header__btn'] });
 
     this.btnLogout.addEventListener('click', () => chatSocket.logoutUser());
   }

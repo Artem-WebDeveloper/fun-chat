@@ -24,7 +24,7 @@
   }
 
   &__btn {
-    width: 11rem;
+    width: 6rem;
     height: 4rem;
     font-weight: 500;
     font-size: 1.8rem;
@@ -32,9 +32,8 @@
     align-items: center;
     justify-content: center;
     gap: 0.4rem;
-
     & div {
-      transform: translateY(2px);
+      transform: translate(-3px, 2px);
 
       & svg {
         // 450px

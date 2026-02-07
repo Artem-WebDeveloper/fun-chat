@@ -85,7 +85,7 @@ export default class MainPage extends Page {
       const status = message?.querySelector('.chat__message-status');
       if (message && messageText) messageText.textContent = text;
       if (status && !status.textContent?.includes('edited')) {
-        status.textContent += ' (edited)';
+        status.textContent = '(edited) ' + status.textContent;
       }
     };
 

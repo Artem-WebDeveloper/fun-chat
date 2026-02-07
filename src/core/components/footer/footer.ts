@@ -26,7 +26,7 @@ export default class Footer {
 
     const logoElement = dom.create({ tag: 'div', classNames: ['footer__logo'] });
     const logo = rssIcon({ size: 40, color: '#000' });
-    logoElement.append(logo, 'RSS School');
+    logoElement.append(logo, 'RS School');
 
     this.authorLink.href = this.content.LINK_AUTHOR;
     this.authorLink.target = '_blank';
