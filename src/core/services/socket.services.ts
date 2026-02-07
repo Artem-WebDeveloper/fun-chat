@@ -22,12 +22,14 @@ class ChatSocket {
   unreadCountRequests: Record<string, string> = {};
 
   messages: Record<string, Message[]> = {};
+  deletedMessageIds: Set<string> = new Set();
   selectedUser: null | string = null;
 
   onServerError?: (message: string) => void;
   updateUsers?: (allUsers: Record<string, User>) => void;
   updateStatusDialogUser?: (isLogined: boolean) => void;
   onMessage?: (message: Message) => void;
+  onDeleteMessage?: (id: string) => void;
   onMessageStatus?: (messageId: string, status: StatusMessage) => void;
   onHistory?: () => void;
 
@@ -126,8 +128,15 @@ class ChatSocket {
 
       if (data.type === 'MSG_FROM_USER') {
         const historyMessages: Message[] = data.payload.messages;
+        console.log(this.deletedMessageIds);
         if (this.selectedUser) {
-          this.messages[this.selectedUser] = historyMessages;
+          this.messages[this.selectedUser] = historyMessages.filter(
+            (message) => !this.deletedMessageIds.has(message.id),
+          );
+          console.log(this.messages);
+
+          // this.messages[this.selectedUser] = historyMessages.filter((message) => {});
+
           this.onHistory?.();
         }
       }
@@ -174,6 +183,21 @@ class ChatSocket {
             }
           }
         });
+      }
+
+      if (data.type === 'MSG_DELETE') {
+        const messageId = data.payload.message.id;
+        this.deletedMessageIds.add(messageId);
+
+        Object.keys(this.messages).forEach((dialogUser) => {
+          this.fetchUnreadCount(dialogUser);
+
+          this.messages[dialogUser] = this.messages[dialogUser].filter(
+            (message) => message.id !== messageId,
+          );
+        });
+
+        this.onDeleteMessage?.(messageId);
       }
     };
 
@@ -325,6 +349,7 @@ class ChatSocket {
     this.messages = {};
     this.otherUsers = {};
     this.unreadCountRequests = {};
+    this.deletedMessageIds.clear();
   }
 
   private updateUser(login: string, user: User) {
@@ -357,6 +382,24 @@ class ChatSocket {
     };
 
     this.unreadCountRequests[data.id] = login;
+    this.socket.send(JSON.stringify(data));
+  }
+
+  deleteMessage(id: string) {
+    if (!this.socket || this.socket.readyState !== WebSocket.OPEN) {
+      console.warn('WebSocket not connected');
+      return;
+    }
+    const data = {
+      id,
+      type: 'MSG_DELETE',
+      payload: {
+        message: {
+          id,
+        },
+      },
+    };
+
     this.socket.send(JSON.stringify(data));
   }
 

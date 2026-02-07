@@ -91,6 +91,20 @@
     justify-self: end;
     margin-bottom: 2rem;
 
+    @media (hover: hover) and (pointer: fine) {
+      &:hover {
+        .chat__message-delete,
+        .chat__message-edit {
+          opacity: 0.5;
+          &:hover {
+            cursor: pointer;
+            opacity: 1;
+            filter: brightness(1.05) saturate(1.1) drop-shadow(0 0 3px currentColor);
+          }
+        }
+      }
+    }
+
     &::after {
       content: '';
       position: absolute;
@@ -124,6 +138,12 @@
     align-items: baseline;
   }
 
+  &__message-footer {
+    display: flex;
+    align-items: center;
+    gap: 0.1rem;
+  }
+
   &__message-from {
     font-weight: 500;
   }
@@ -145,6 +165,7 @@
   }
 
   &__message-status {
+    margin-left: auto;
     min-height: 2.5rem;
     padding: 0 1rem;
     justify-self: end;
@@ -155,6 +176,26 @@
     color: rgba(244, 232, 232, 0.885);
     color: #3d3b3b;
     // backdrop-filter: blur(2rem);
+  }
+
+  &__message-delete,
+  &__message-edit {
+    padding: 0.1rem;
+    display: grid;
+    place-items: center;
+    transition: opacity 0.2s ease;
+    opacity: 0;
+
+    & svg {
+      pointer-events: none;
+    }
+  }
+
+  &__message-delete {
+    color: #ff8e8e;
+  }
+  &__message-edit {
+    color: #fff;
   }
 }
 

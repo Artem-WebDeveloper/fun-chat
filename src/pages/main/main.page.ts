@@ -8,6 +8,8 @@ import './main.page.scss';
 import type { Message, StatusMessage, User } from '../../app/types';
 import formatDate from '../../core/utils/formatDate';
 import getStatusMessage from '../../core/utils/getStatusMessage';
+import deleteIcon from '../../core/components/icons/delete.icon';
+import editIcon from '../../core/components/icons/edit.icon';
 
 export default class MainPage extends Page {
   header: Header;
@@ -60,13 +62,19 @@ export default class MainPage extends Page {
     };
 
     chatSocket.onMessageStatus = (id: string, status: StatusMessage) => {
-      const statusMessages = this.main.querySelectorAll(
-        `.chat__message-status[data-message-id="${id}"]`,
-      );
+      const statusMessages = this.main.querySelectorAll(`.chat__message[data-message-id="${id}"]`);
       console.log(statusMessages, status);
       statusMessages.forEach((message) => {
-        message.textContent = getStatusMessage(status, true);
+        const statusElement = message.querySelector('.chat__message-status');
+        if (statusElement instanceof HTMLElement) {
+          statusElement.textContent = getStatusMessage(status, true);
+        }
       });
+    };
+
+    chatSocket.onDeleteMessage = (id: string) => {
+      const message = this.main.querySelector(`.chat__message[data-message-id="${id}"]`);
+      if (message && message instanceof HTMLElement) message.remove();
     };
 
     this.form.addEventListener('submit', this.submitForm);
@@ -77,8 +85,26 @@ export default class MainPage extends Page {
     this.main.addEventListener('click', (event) => {
       const target = event.target;
       if (!(target instanceof HTMLElement)) return;
-      if (!target.closest('.main')) return;
 
+      const deleteButton = target.closest('.chat__message-delete');
+      if (deleteButton) {
+        const message = deleteButton.closest('.chat__message');
+        const id = message?.getAttribute('data-message-id');
+        if (id && message) {
+          chatSocket.deleteMessage(id);
+        }
+        event.stopPropagation();
+        return;
+      }
+
+      const editButton = target.closest('.chat__message-edit');
+      if (editButton) {
+        console.log('edit!');
+        event.stopPropagation();
+        return;
+      }
+
+      if (!target.closest('.main')) return;
       const separator = document.querySelector('.chat__separator');
       if (separator) separator.remove();
 
@@ -174,6 +200,7 @@ export default class MainPage extends Page {
     const isMine = from === chatSocket.curUser;
 
     const wrap = dom.create({ tag: 'div', classNames: ['chat__message'] });
+    wrap.dataset.messageId = id;
     if (!isMine) wrap.classList.add('chat__message--companion');
 
     const date = formatDate(datetime);
@@ -191,15 +218,23 @@ export default class MainPage extends Page {
       classNames: ['chat__message-status'],
       text: getStatusMessage(status, isMine),
     });
-    statusElement.dataset.messageId = id;
 
     if (status.isEdited) {
       statusElement.textContent += ' (edited)';
     }
 
+    const deleteElement = deleteIcon({ size: 14 });
+    deleteElement.className = 'chat__message-delete';
+    const editElement = editIcon({ size: 15 });
+    editElement.className = 'chat__message-edit';
+
     const header = dom.create({ tag: 'div', classNames: ['chat__message-header'] });
+    const footer = dom.create({ tag: 'div', classNames: ['chat__message-footer'] });
     header.append(fromName, dateElement);
-    wrap.append(header, content, statusElement);
+    footer.append(statusElement);
+    if (isMine) footer.prepend(deleteElement, editElement);
+
+    wrap.append(header, content, footer);
 
     return wrap;
   }
