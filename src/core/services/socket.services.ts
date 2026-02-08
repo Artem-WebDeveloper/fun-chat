@@ -49,7 +49,6 @@ class ChatSocket {
     this.socket = new WebSocket(`ws://${BASE_URL}`);
 
     this.socket.onopen = () => {
-      console.log('[OPEN] Connection established!');
       this.setConnectionState(true);
 
       if (this.curUser && this.curPassword) {
@@ -60,9 +59,7 @@ class ChatSocket {
     };
 
     this.socket.onmessage = (event) => {
-      console.log(`[MESSAGE] ↓`);
       const data = JSON.parse(event.data);
-      console.log(data);
 
       if (data.type === 'USER_LOGIN' && data.payload.user.isLogined) {
         this.handleUserlogin();
@@ -138,15 +135,12 @@ class ChatSocket {
 
       if (data.type === 'MSG_FROM_USER') {
         const historyMessages: Message[] = data.payload.messages;
-        console.log(this.deletedMessageIds);
         if (this.selectedUser) {
           this.messages[this.selectedUser] = historyMessages.filter(
             (message) => !this.deletedMessageIds.has(message.id),
           );
-          console.log(this.messages);
 
           // this.messages[this.selectedUser] = historyMessages.filter((message) => {});
-          console.log(this.messages);
           this.onHistory?.();
         }
       }
@@ -448,13 +442,11 @@ class ChatSocket {
   }
 
   handleUserlogin() {
-    console.log('Login succes');
     navigate(PageIDs.MAIN_PAGE);
     this.getAllUsers();
   }
 
   handleUserlogout() {
-    console.log('Logout succes');
     navigate(PageIDs.LOGIN_PAGE);
   }
 

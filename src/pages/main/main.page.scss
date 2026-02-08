@@ -45,7 +45,7 @@
     gap: 1rem;
     justify-content: space-around;
     padding: 1rem 0;
-    box-shadow: 0 1.5rem 1.5rem -1rem rgba(0, 0, 0, 0.15);
+    box-shadow: 0 1.5rem 1.5rem -1rem rgba(0, 0, 0, 0.1);
   }
 
   &__info {
@@ -360,36 +360,46 @@
 .sidebar {
   grid-area: sidebar;
   background-color: rgba(255, 255, 255, 0.1);
-  overflow-y: auto;
+  overflow-y: hidden;
   border-top-left-radius: 2rem;
   border-bottom-left-radius: 2rem;
 
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+
   padding: 0;
 
-  &::-webkit-scrollbar {
-    width: 0.7rem;
-  }
-  &::-webkit-scrollbar-track {
-    background: rgba(248, 248, 248, 0.18);
-    // border-radius: 2rem;
+  &__search {
+    padding: 1.2rem;
+    flex-shrink: 0;
   }
 
-  &::-webkit-scrollbar-thumb {
-    background: linear-gradient(
-      135deg,
-      rgba(195, 177, 225, 0.35) 0%,
-      rgba(195, 177, 225, 0.18) 100%
-    );
-    border-radius: 0.1rem;
-    transition: background 0.25s ease;
-  }
+  &__search-input {
+    font-family: inherit;
+    font-size: 1.7rem;
+    padding: 0.9rem 2rem;
+    border-top-left-radius: 1rem;
+    border: none;
+    width: 100%;
+    transition: all 0.15s;
+    background-color: transparent;
+    color: #fff;
+    box-shadow: 0 0 0 3px rgba(144, 186, 225, 0.2);
+    &:focus-visible {
+      outline: none;
+      box-shadow: 0 0 0 5px rgba(144, 186, 225, 0.6);
+      background-color: rgba(144, 186, 225, 0.1);
 
-  &::-webkit-scrollbar-thumb:hover {
-    background: linear-gradient(
-      135deg,
-      rgba(195, 177, 225, 0.65) 0%,
-      rgba(195, 177, 225, 0.38) 100%
-    );
+      &::placeholder {
+        color: rgba(255, 255, 255, 0.3);
+      }
+    }
+
+    &::placeholder {
+      color: rgba(255, 255, 255, 0.5);
+      transition: all 0.3s;
+    }
   }
 }
 .footer {
@@ -402,6 +412,42 @@
 .users {
   &__list {
     width: 100%;
+    flex: 1;
+    overflow-y: auto;
+    min-height: 0;
+
+    &::-webkit-scrollbar {
+      width: 0.7rem;
+    }
+    &::-webkit-scrollbar-track {
+      background: rgba(248, 248, 248, 0.18);
+      // border-radius: 2rem;
+    }
+
+    &::-webkit-scrollbar-thumb {
+      background: linear-gradient(
+        135deg,
+        rgba(195, 177, 225, 0.35) 0%,
+        rgba(195, 177, 225, 0.18) 100%
+      );
+      border-radius: 0.1rem;
+      transition: background 0.25s ease;
+    }
+
+    &::-webkit-scrollbar-thumb:hover {
+      background: linear-gradient(
+        135deg,
+        rgba(195, 177, 225, 0.65) 0%,
+        rgba(195, 177, 225, 0.38) 100%
+      );
+    }
+  }
+
+  &__list-info {
+    margin-top: 1rem;
+    font-size: 1.9rem;
+    font-weight: 200;
+    text-align: center;
   }
 
   &__item {
@@ -412,10 +458,6 @@
 
     gap: 1rem;
     transition: background 0.1s;
-
-    &:first-child {
-      border-top-left-radius: 1.2rem;
-    }
 
     &--active {
       background-color: rgba(166, 201, 234, 0.45);

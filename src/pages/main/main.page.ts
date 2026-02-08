@@ -19,8 +19,11 @@ export default class MainPage extends Page {
   form: HTMLFormElement;
   btnSend: HTMLButtonElement;
   inputField: HTMLTextAreaElement;
+  inputSearch: HTMLInputElement;
+  usersList: HTMLUListElement;
 
   editMessageId: string | null = null;
+  searchUser: string = '';
 
   constructor(id: string) {
     super(id);
@@ -28,9 +31,11 @@ export default class MainPage extends Page {
     this.footer = new Footer();
     this.main = dom.create({ tag: 'main', classNames: ['main'] });
     this.sidebar = dom.create({ tag: 'aside', classNames: ['sidebar'] });
-
     this.form = dom.create({ tag: 'form', classNames: ['form-dialog'] });
     this.inputField = dom.create({ tag: 'textarea', classNames: ['form-dialog__input'] });
+    this.inputSearch = dom.create({ tag: 'input', classNames: ['sidebar__search-input'] });
+    this.usersList = dom.create({ tag: 'ul', classNames: ['users__list'] });
+
     this.btnSend = dom.create({
       tag: 'button',
       classNames: ['btn', 'form-dialog__btn'],
@@ -42,6 +47,14 @@ export default class MainPage extends Page {
         event.preventDefault();
         this.form.requestSubmit();
       }
+    });
+
+    this.inputSearch.addEventListener('input', (event) => {
+      const target = event.target;
+      if (!(target instanceof HTMLInputElement)) return;
+      this.searchUser = target.value;
+
+      this.renderUsersList(chatSocket.otherUsers);
     });
 
     chatSocket.updateUsers = (otherUsers: Record<string, User>) => {
@@ -65,7 +78,6 @@ export default class MainPage extends Page {
 
     chatSocket.onMessageStatus = (id: string, status: StatusMessage) => {
       const statusMessages = this.main.querySelectorAll(`.chat__message[data-message-id="${id}"]`);
-      console.log(statusMessages, status);
       statusMessages.forEach((message) => {
         const statusElement = message.querySelector('.chat__message-status');
         if (statusElement instanceof HTMLElement) {
@@ -127,45 +139,53 @@ export default class MainPage extends Page {
     });
   }
 
-  onEdeting(editButton: Element) {
-    const message = editButton.closest('.chat__message');
-    const id = message?.getAttribute('data-message-id');
-    const text = message?.querySelector('.chat__message-content')?.textContent;
-    if (text && id) {
-      this.inputField.value = text;
-      this.inputField.focus();
-      this.inputField.select();
-      this.editMessageId = id || null;
-
-      if (!this.form.querySelector('.form-dialog__cancel-btn')) {
-        const cancelButton = deleteIcon({ size: 20 });
-        cancelButton.className = 'form-dialog__cancel-btn';
-
-        cancelButton.addEventListener('click', () => {
-          this.editMessageId = null;
-          cancelButton.remove();
-          this.inputField.value = '';
-          this.inputField.blur();
-          this.inputField.placeholder = 'Write a message...';
-        });
-
-        this.form.append(cancelButton);
-      }
-    }
-  }
-
   renderSidebar(otherUsers: Record<string, User>) {
     this.sidebar.replaceChildren();
-    const usersList = dom.create({ tag: 'ul', classNames: ['users__list'] });
-    const users = Object.keys(otherUsers);
 
-    users.forEach((user) => {
-      const { login, isLogined, unreadCount } = otherUsers[user];
-      const userElement = this.createUser(login, isLogined, unreadCount);
-      usersList.append(userElement);
+    const searchWrap = dom.create({ tag: 'div', classNames: ['sidebar__search'] });
+    searchWrap.append(this.inputSearch);
+    this.inputSearch.placeholder = 'Search...';
+
+    this.renderUsersList(otherUsers);
+    this.sidebar.append(searchWrap, this.usersList);
+  }
+
+  getFilteredUsers(otherUsers: Record<string, User>) {
+    const query = this.searchUser.trim().toLowerCase();
+
+    if (!query) {
+      return Object.values(otherUsers);
+    }
+
+    return Object.values(otherUsers).filter(({ login }) => {
+      const name = login.toLowerCase();
+      return name.startsWith(query) || name.includes(query);
     });
+  }
 
-    this.sidebar.append(usersList);
+  renderUsersList(otherUsers: Record<string, User>) {
+    this.usersList.replaceChildren();
+
+    const info = dom.create({ tag: 'p', classNames: ['users__list-info'] });
+
+    if (Object.keys(otherUsers).length === 0) {
+      info.textContent = 'No other members yet :)';
+      this.usersList.append(info);
+      return;
+    }
+
+    const users = this.getFilteredUsers(otherUsers);
+
+    if (users.length === 0) {
+      info.textContent = 'No users found!';
+      this.usersList.append(info);
+      return;
+    }
+
+    users.forEach(({ login, isLogined, unreadCount }) => {
+      const userElement = this.createUser(login, isLogined, unreadCount);
+      this.usersList.append(userElement);
+    });
   }
 
   createUser(login: string, isLogined: boolean, unreadCount?: number) {
@@ -177,7 +197,6 @@ export default class MainPage extends Page {
     const userStatus = dom.create({ tag: 'div', classNames: ['users__status'] });
     const messages = dom.create({ tag: 'p', classNames: ['users__messages'] });
 
-    // userStatus.style.backgroundColor = isLogined ? 'green' : 'red';
     userStatus.classList.toggle('users__status--online', isLogined);
     user.append(userStatus, userName);
 
@@ -332,8 +351,8 @@ export default class MainPage extends Page {
 
   updateSelectedUser(isLogined: boolean) {
     const status = this.main.querySelector('.main__companion-status');
-    console.log(status);
     if (!status) return;
+
     status.textContent = isLogined ? 'online' : 'offline';
     status.classList.toggle('online', isLogined);
     status.classList.toggle('offline', !isLogined);
@@ -354,6 +373,33 @@ export default class MainPage extends Page {
       top: chat.scrollHeight,
       behavior: 'smooth',
     });
+  }
+
+  onEdeting(editButton: Element) {
+    const message = editButton.closest('.chat__message');
+    const id = message?.getAttribute('data-message-id');
+    const text = message?.querySelector('.chat__message-content')?.textContent;
+    if (text && id) {
+      this.inputField.value = text;
+      this.inputField.focus();
+      this.inputField.select();
+      this.editMessageId = id || null;
+
+      if (!this.form.querySelector('.form-dialog__cancel-btn')) {
+        const cancelButton = deleteIcon({ size: 20 });
+        cancelButton.className = 'form-dialog__cancel-btn';
+
+        cancelButton.addEventListener('click', () => {
+          this.editMessageId = null;
+          cancelButton.remove();
+          this.inputField.value = '';
+          this.inputField.blur();
+          this.inputField.placeholder = 'Write a message...';
+        });
+
+        this.form.append(cancelButton);
+      }
+    }
   }
 
   scrollToUnreadMessage() {
