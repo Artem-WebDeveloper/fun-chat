@@ -177,7 +177,8 @@ export default class MainPage extends Page {
     const userStatus = dom.create({ tag: 'div', classNames: ['users__status'] });
     const messages = dom.create({ tag: 'p', classNames: ['users__messages'] });
 
-    userStatus.style.backgroundColor = isLogined ? 'green' : 'red';
+    // userStatus.style.backgroundColor = isLogined ? 'green' : 'red';
+    userStatus.classList.toggle('users__status--online', isLogined);
     user.append(userStatus, userName);
 
     if (unreadCount) {
