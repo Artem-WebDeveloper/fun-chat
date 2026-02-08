@@ -52,7 +52,12 @@ export default class App {
   private enableRouteChange() {
     const handleRoute = () => {
       const hash = window.location.hash.slice(1);
-      this.renderPage(hash || PageIDs.LOGIN_PAGE);
+      const defaultPage =
+        chatSocket.isAuthorized || chatSocket.hasStoredSession()
+          ? PageIDs.MAIN_PAGE
+          : PageIDs.LOGIN_PAGE;
+
+      this.renderPage(hash || defaultPage);
     };
 
     window.addEventListener('hashchange', handleRoute);

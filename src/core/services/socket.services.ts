@@ -26,6 +26,7 @@ class ChatSocket {
   deletedMessageIds: Set<string> = new Set();
   selectedUser: null | string = null;
 
+  private readonly STORAGE_KEY = 'fun-chat-auth';
   SEC_TRY_RECONNECT = 4;
 
   onServerError?: (message: string, isResolved?: boolean) => void;
@@ -46,6 +47,9 @@ class ChatSocket {
 
   connect() {
     if (this.socket?.readyState === WebSocket.OPEN) return;
+
+    this.restoreAuthFromStorage();
+
     this.socket = new WebSocket(`ws://${BASE_URL}`);
 
     this.socket.onopen = () => {
@@ -65,16 +69,30 @@ class ChatSocket {
         this.handleUserlogin();
         this.curUser = data.payload.user.login;
         this.isAuthorized = data.payload.user.isLogined;
+
+        this.saveAuthToStorage();
       }
 
       if (data.type === 'USER_LOGOUT' && !data.payload.user.isLogined) {
         this.handleUserlogout();
         this.clearAuth();
         this.clearSession();
+
+        this.clearAuthStorage();
       }
 
       if (data.type === 'ERROR' && data.payload.error) {
         this.onServerError?.(data.payload.error);
+
+        const errorText = data.payload.error.toLowerCase();
+        if (errorText.includes('already authorized')) {
+          this.clearAuth();
+          this.clearSession();
+          this.clearAuthStorage();
+
+          navigate(PageIDs.LOGIN_PAGE);
+          this.onServerError?.('This user is already logged in another tab!');
+        }
       }
 
       if (data.type === 'USER_EXTERNAL_LOGIN') {
@@ -94,6 +112,8 @@ class ChatSocket {
         const user = data.payload.user;
         if (user.login === this.curUser) {
           this.clearAuth();
+          this.clearSession();
+          this.clearAuthStorage();
           navigate(PageIDs.LOGIN_PAGE);
         } else {
           this.updateUser(user.login, user);
@@ -228,12 +248,17 @@ class ChatSocket {
     };
 
     this.socket.onclose = (event) => {
-      if (!event.wasClean) {
+      this.setConnectionState(false);
+
+      if (event.wasClean) {
+        this.clearAuthStorage();
+        this.clearAuth();
+        this.clearSession();
+      } else {
         this.onServerError?.('Connection lost! Try to restore...');
         this.tryReconnect();
       }
 
-      this.setConnectionState(false);
       this.socket = null;
     };
   }
@@ -357,6 +382,40 @@ class ChatSocket {
     this.socket.send(JSON.stringify(data));
   }
 
+  private saveAuthToStorage() {
+    if (this.curUser && this.curPassword) {
+      sessionStorage.setItem(
+        this.STORAGE_KEY,
+        JSON.stringify({
+          login: this.curUser,
+          password: this.curPassword,
+        }),
+      );
+    }
+  }
+
+  private restoreAuthFromStorage() {
+    const stored = sessionStorage.getItem(this.STORAGE_KEY);
+    if (stored) {
+      try {
+        const { login, password } = JSON.parse(stored);
+        this.curUser = login;
+        this.curPassword = password;
+        this.isAuthorized = true;
+        return true;
+      } catch (error) {
+        if (error) {
+          sessionStorage.removeItem(this.STORAGE_KEY);
+        }
+      }
+    }
+    return false;
+  }
+
+  private clearAuthStorage() {
+    sessionStorage.removeItem(this.STORAGE_KEY);
+  }
+
   private clearAuth() {
     this.curUser = null;
     this.curPassword = null;
@@ -448,6 +507,10 @@ class ChatSocket {
 
   handleUserlogout() {
     navigate(PageIDs.LOGIN_PAGE);
+  }
+
+  public hasStoredSession(): boolean {
+    return sessionStorage.getItem(this.STORAGE_KEY) !== null;
   }
 
   private tryReconnect() {
