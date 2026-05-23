@@ -6,9 +6,8 @@ import './about.page.scss';
 
 export default class AboutPage extends Page {
   content = {
-    DESCRIP_APP:
-      'The app was developed to demonstrate the Fun Chat assignment as part of the RSSchool JS/FE 2025Q3 course.',
-    DESCRIP_WORK: 'Users and messages are deleted once per day.',
+    DESCRIP_APP: 'Real-time chat built with WebSockets.',
+    DESCRIP_WORK: "Messages don't last forever - everything resets daily.",
     TITLE: 'Fun Chat',
     LINK_AUTHOR: 'https://github.com/Artem-WebDeveloper',
   };
