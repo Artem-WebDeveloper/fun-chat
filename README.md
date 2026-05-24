@@ -1,7 +1,7 @@
 # Fun-Chat
 Real-time чат на WebSocket - Vanilla TypeScript, без фреймворков
 
-<img width="1506" height="857" alt="547061570-c4dc1af2-3241-4eff-8616-53ec7c997e51" src="https://github.com/user-attachments/assets/52ac78ea-d149-4074-a9b5-df696284d4b6" />
+<img width="1296" height="671" alt="chat" src="https://github.com/user-attachments/assets/ea641db7-4eed-4170-b4c0-6e64c2cb2474" />
 
 
 ## About
