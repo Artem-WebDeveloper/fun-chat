@@ -1,8 +1,13 @@
 {
   "name": "fun-chat",
   "private": true,
-  "version": "0.0.0",
+  "version": "1.0.0",
   "type": "module",
+  "homepage": "https://artem-webdeveloper.github.io/fun-chat/",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Artem-WebDeveloper/fun-chat"
+  },
   "scripts": {
     "dev": "vite",
     "build": "tsc && vite build",
